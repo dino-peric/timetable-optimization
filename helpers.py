@@ -29,16 +29,15 @@ def RemoveDifferentElements(a, b):
                 break
     return a
 
+
+
 '''
-a = [1, 2, 3, 4, 5, 6, 7 ]
-b = [1, 2, 10, 12, 5]
-# We want elements in a that are not in b
-for i in range(len(a)):
-    toRemove = True
-    for j in range(len(b)):
-        if a[i] == b[j] and a[i] == b[j]:
-            toRemove = False
-    if toRemove:
-        indices.append(a[i])
-print(indices)
+class Group:
+    def __init__(self, groupID):
+        self.groupID = groupID
+        self.overlaps = []
+
+    def AddOverlap(self, otherGroupID):
+        self.overlaps.append(otherGroupID)
+
 '''
