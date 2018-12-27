@@ -29,15 +29,18 @@ def RemoveDifferentElements(a, b):
                 break
     return a
 
+class Student:
+    def __init__(self, studentID):
+        self.studentID = studentID
+        self.groups = []
+        self.activities = []
 
-
-'''
 class Group:
     def __init__(self, groupID):
         self.groupID = groupID
         self.overlaps = []
-
-    def AddOverlap(self, otherGroupID):
-        self.overlaps.append(otherGroupID)
-
-'''
+        self.studentsCount = 0
+        self.minCount = 0  
+        self.minPref = 0 
+        self.max = 0 
+        self.maxPref = 0
