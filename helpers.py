@@ -1,10 +1,12 @@
+import os
+
 # Returns file as array, returns file without header + header
 def ReadFileArray(filename):
     with open(filename, 'r') as f:
         lines = f.read().splitlines()
     arr = []
     for line in lines:
-        arr.append( line.split(',') )
+         arr.append( line.split(',') )
     header = arr[0]
     arr.pop(0)
     return arr, header
@@ -29,17 +31,24 @@ def RemoveDifferentElements(a, b):
                 break
     return a
 
+#class Activity: 
+#    def __init__(self, activityID):
+#        self.activityID = activityID
+#        self.groups = []
+
 class Student:
     def __init__(self, studentID):
         self.studentID = studentID
-        self.groups = []
-        self.activities = []
+        # Dictionary where key = activityID, value = groupID of that student
+        self.activityGroupPair = {}
 
 class Group:
     def __init__(self, groupID):
         self.groupID = groupID
+        # Should contain all groups that this group overlaps with
         self.overlaps = []
-        self.studentsCount = 0
+        self.initStudentsCount = 0
+        self.currentStudentCount = 0
         self.minCount = 0  
         self.minPref = 0 
         self.max = 0 
