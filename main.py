@@ -40,7 +40,7 @@ start = time.time()
 #      ulaznoj datoteci students-file pa se ti podaci mogu slobodno zanemariti.
 #      znaci treba proc kroz overlaps i uzet samo one groupIDeve koji se nalaze u groupID polju u
 #      students-file, ovo treba napraviti prije uniqueGroups poziva ili cak unutar njega, 
-#      a mozda i ne moramo uopce ne znam utjece li na performans, ovaj TODO je za kasnije
+#      a mozda i ne moramo uopce ne znam utjece li na performans, ovaj TODO je za kasnije nakon implementacije algoritma
 
 # Get all unique students
 uniqueStudents = set()
@@ -68,7 +68,7 @@ for i in range(len(overlaps)):
     uniqueGroups.add(overlaps[i][0])
 uniqueGroups = list(uniqueGroups)
 
-groupsDict = {} # Dictionary where key = groupId, value = Group object
+groupsDict = {} # Dictionary where key = groupId, value = Group object, combines LIMITS and OVERLAPS files
 for i in range(len(uniqueGroups)):
     overlapsWith = []
     newGroup = Group(uniqueGroups[i])
@@ -78,7 +78,7 @@ for i in range(len(uniqueGroups)):
     groupsDict[uniqueGroups[i]] = newGroup
     groupsDict[uniqueGroups[i]].overlaps = overlapsWith
     for k in range(len(limits)):                        # Add all limits for groups
-        if limits[k][0] == uniqueGroups[i]:                         # No need for limits file from this point
+        if limits[k][0] == uniqueGroups[i]:             # No need for limits file from this point
             groupsDict[uniqueGroups[i]].initStudentsCount = limits[k][1]
             groupsDict[uniqueGroups[i]].minCount = limits[k][2]
             groupsDict[uniqueGroups[i]].minPref = limits[k][3]
@@ -88,18 +88,33 @@ for i in range(len(uniqueGroups)):
 print(len(groupsDict))
 print(groupsDict['140915'].initStudentsCount)
 
+# TODO 0) How to transform requests file into a class so it's easier to manipulate within main loop, maybe not needed(?)
+
 # AKTIVNOST = PREDMET npr. NASP 
 # GRUPA     = UCIONA  npr. B4, B2 
-# znaci jedna aktivnost ima vise grupa, student moze biti samo u jednoj grupi 
+# znaci jedna aktivnost ima vise grupa, student moze biti samo u jednoj grupi, 
+# ALI za jednu aktivnost moze traziti da ga prebacimo u jednu od vise grupa
 
-# TODO for each binary element check if: no group overlap, minmax satisfied and no swap in that activity (?)
-# TODO 1) Look if swapping is possible ie check if group overlaps with another (use overlaps field in Group)
-# TODO 2) Check if it is possible to add/take away students from this group (use all other fields in Group)
-# TODO 3) Some butko shit that I don't understand
+# TODO 1) make binary vector of len(requests) that represents granting or denying of requests, if vec[i] = 0 then 
+# request[i] was not granted, if 1 it was granted   
+### MAIN LOOP ###
+# TODO 2) Generate neighbourhood -> pick which way to generate neighbourhood
+# TODO 3) Calculate goal function for each neighbour: 
+#      3.1) for each binary element (IF WE RANDOMLY ASSIGNED 1 DURING NEIGHBOURHOOD GENERATION)
+#         check if: no group overlap, minmax satisfied and no swap already for that activity for that student(?)
+#      3.2) Check if swapping is possible ie check if group overlaps with another (use overlaps field in Group)
+#      3.3) Check if it is possible to add/take away students from this group (use all other fields in Group)
+#      3.4) Some butko shit that I don't understand (this is maybe the (?) in TODO 3.1))
+#      3.5) If any of 3.1 - 3.4 is not possible goal function = -1 (this neighbour is not possible so we ignore it)
+# TODO 4) Select best neighbour based on best goal function and start loop again
+### END MAIN LOOP ###
 
 # Main loop
 while True:
 
+
+
+    # Timeout check
     end = time.time()
     if end - start > int(timeout):
         break

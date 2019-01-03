@@ -40,6 +40,7 @@ class Student:
     def __init__(self, studentID):
         self.studentID = studentID
         # Dictionary where key = activityID, value = groupID of that student
+        # This is basically the timetable of the student 
         self.activityGroupPair = {}
 
 class Group:
@@ -53,3 +54,11 @@ class Group:
         self.minPref = 0 
         self.max = 0 
         self.maxPref = 0
+
+# TODO figure this out 
+class Request:
+    def __init__(self, requestID):
+        self.requestID = requestID
+        self.studentID = 0 
+        self.reqGroupId = 0
+        self.granted = False
