@@ -60,6 +60,7 @@ for i in range(len(uniqueStudents)):
     newStudent.activityGroupPair = activsGroups      
     studentsDict[uniqueStudents[i]] = newStudent
 
+studentsDictOrg = studentsDict
 #print(studentsDict['15317'].activityGroupPair)
 
 # Get all unique groups from overlaps file
@@ -117,11 +118,9 @@ print(requestsDict[('16003', '2897934')].requestedGroups)
 # znaci jedna aktivnost ima vise grupa, student moze biti samo u jednoj grupi, 
 # ALI za jednu aktivnost moze traziti da ga prebacimo u jednu od vise grupa
 
-# TODO 1) make binary vector of len(requests) that represents granting or denying of requests, if vec[i] = 0 then 
-# request[i] was not granted, if 1 it was granted   
-#      1.1) Assign random values and check them
+
 ### MAIN LOOP ###
-# TODO 2) Generate neighbourhood -> pick which way to generate neighbourhood
+
 # TODO 3) Calculate goal function for each neighbour: 
 #      3.1) for each binary element (IF WE RANDOMLY ASSIGNED 1 DURING NEIGHBOURHOOD GENERATION)
 #         check if: no group overlap, minmax satisfied and no swap already for that activity for that student(?)
@@ -132,46 +131,40 @@ print(requestsDict[('16003', '2897934')].requestedGroups)
 # TODO 4) Select best neighbour based on best goal function and start loop again
 ### END MAIN LOOP ###
 
+# TODO 1) make binary vector of len(requests) that represents granting or denying of requests, if vec[i] = 0 then 
+# request[i] was not granted, if 1 it was granted   
+#      1.1) Assign random values and check them
 vector = [0] * len(requests)
-#print(vector)
 
 # Main loop
 while True:
+    # TODO 2) Generate neighbourhood -> pick which way to generate neighbourhood
+
+
 
     for i in range(len(vector)):
-        reqStdId = requests[i][0]
-        reqActId = requests[i][1]
-        reqGrpId = requests[i][2]
+        reqStdId = requests[i][0] # studentId in request
+        reqActId = requests[i][1] # activityId in request
+        reqGrpId = requests[i][2] # groupId in request
         if vector[i] == 1:  # Ako je 1 idemo provjerit jel se moze taj request dat
-            # Provjera je li već dan request za taj activity 
-            if not requestsDict[ (reqStdId, reqActId) ].granted:
-                # Provjera za overlapping
-                noOverlaps = True
-                for key in studentsDict[ reqStdId ].activityGroupPair:  # groupIDevi u kojima je student valjda
-                    if key != reqActId: # Ignoriramo aktivnost za koju trenutno gledamo
-                        if reqGrpId in groupsDict[key].overlaps:
-                            noOverlaps = False
-                            break
-                if noOverlaps:
-                    # Provjera za broj studenata
-                    # nađemo studenta sa id-jem i onda sa activity id-jem nađemo grupu u kojoj se on trenutno nalazi
-                    currGroup = groupsDict[ studentsDict[ reqStdId ].activityGroupPair[ reqActId ] ]
-                    requestedGroup = groupsDict[reqGrpId]
-                    if requestedGroup.currentStudentCount + 1 <= requestedGroup.max and currGroup.currentStudentCount - 1 >= currGroup.min:
-                        # Moze se napravit zamjena 
-                        # Povecaj broj ljudi u grupi u koju zeli ici
-                        groupsDict[reqGrpId].currentStudentCount += 1
-                        # Smanji broj ljudi u grupi iz koje izlazi
-                        groupsDict[ studentsDict[ reqStdId ].activityGroupPair[ reqActId ] ].currentStudentCount -= 1
-                        # Promijeni studentov raspored 
-                        studentsDict[ reqStdId ].activityGroupPair[ reqActId ] = requestedGroup
-                        requestsDict[ (reqStdId, reqActId) ].granted = True
-        
-        
-            
-
-
-
+            if IsRequestValid(reqStdId, reqActId, reqGrpId):
+                # Moze se napravit zamjena -> napravimo ju
+                groupsDict[reqGrpId].currentStudentCount += 1 # Povecaj broj ljudi u grupi u koju zeli ici
+                # Smanji broj ljudi u grupi iz koje izlazi
+                groupsDict[ studentsDict[ reqStdId ].activityGroupPair[ reqActId ] ].currentStudentCount -= 1
+                # Promijeni studentov raspored 
+                studentsDict[ reqStdId ].activityGroupPair[ reqActId ] = groupsDict[reqGrpId]
+                requestsDict[ (reqStdId, reqActId) ].granted = True
+        else: 
+            # Ako je vector[i] == 0 onda moramo napravit suprotno
+            # Request nije više granted
+            requestsDict[ (reqStdId, reqActId) ].granted = False
+            # Trebamo ga vratiti u staru grupu
+            studentsDict[ reqStdId ].activityGroupPair[ reqActId ] = studentsDictOrg[ reqStdId ].activityGroupPair[reqActId]
+            # Smanjiti broj ljudi u grupi iz koje izlazi 
+            groupsDict[reqGrpId].currentStudentCount -= 1
+            # Povecati broj ljudi u orginalnoj grupi jer se u nju vraca
+            groupsDict[ studentsDict[ reqStdId ].activityGroupPair[ reqActId ] ].currentStudentCount += 1
 
 
     # Timeout check
@@ -181,6 +174,22 @@ while True:
 
 print(end - start)
 
-
-
+def IsRequestValid(vector, i, reqStdId, reqActId, reqGrpId):
+    # Provjera je li već dan request za taj activity 
+    if not requestsDict[ (reqStdId, reqActId) ].granted:
+        # Provjera za overlapping
+        noOverlaps = True
+        for key in studentsDict[ reqStdId ].activityGroupPair:  # groupIDevi u kojima je student valjda
+            if key != reqActId: # Ignoriramo aktivnost za koju trenutno gledamo
+                if reqGrpId in groupsDict[key].overlaps:
+                    noOverlaps = False
+                    break
+        if noOverlaps:
+            # Provjera za broj studenata
+            # nađemo studenta sa id-jem i onda sa activity id-jem nađemo grupu u kojoj se on trenutno nalazi
+            currGroup = groupsDict[ studentsDict[ reqStdId ].activityGroupPair[ reqActId ] ]
+            requestedGroup = groupsDict[reqGrpId]
+            if requestedGroup.currentStudentCount + 1 <= requestedGroup.max and currGroup.currentStudentCount - 1 >= currGroup.min:
+                return True
+    return False
 
