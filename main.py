@@ -60,7 +60,7 @@ for i in range(len(uniqueStudents)):
     newStudent.activityGroupPair = activsGroups      
     studentsDict[uniqueStudents[i]] = newStudent
 
-print(studentsDict['15317'].activityGroupPair)
+#print(studentsDict['15317'].activityGroupPair)
 
 # Get all unique groups from overlaps file
 uniqueGroups = set()
@@ -80,15 +80,37 @@ for i in range(len(uniqueGroups)):
     for k in range(len(limits)):                        # Add all limits for groups
         if limits[k][0] == uniqueGroups[i]:             # No need for limits file from this point
             groupsDict[uniqueGroups[i]].initStudentsCount = limits[k][1]
+            groupsDict[uniqueGroups[i]].currentStudentCount = limits[k][1]            
             groupsDict[uniqueGroups[i]].minCount = limits[k][2]
             groupsDict[uniqueGroups[i]].minPref = limits[k][3]
             groupsDict[uniqueGroups[i]].max = limits[k][4]
             groupsDict[uniqueGroups[i]].maxPref = limits[k][5]
 
-print(len(groupsDict))
-print(groupsDict['140915'].initStudentsCount)
+#print(len(groupsDict))
+#print(groupsDict['140915'].initStudentsCount)
 
 # TODO 0) How to transform requests file into a class so it's easier to manipulate within main loop, maybe not needed(?)
+# Get all requests grouped by students
+reqFromOneStudent = set()
+for i in range(len(requests)):
+    reqFromOneStudent.add((requests[i][0], requests[i][1]))
+reqFromOneStudent = list(reqFromOneStudent)
+
+requestsDict = {} # Dictionary where key = (studentId, activityId), value = [requested groups ids]
+for i in range(len(reqFromOneStudent)):
+    newRequest = Request( reqFromOneStudent[i] )
+    requestedGroups = []
+    for j in range(len(requests)):
+        if requests[j][0] == reqFromOneStudent[i][0] and requests[j][1] == reqFromOneStudent[i][1]:
+            requestedGroups.append(requests[j][2])
+            #if (len(requestedGroups) >= 2):
+                #print(requests[j][0], requests[j][1], requestedGroups)
+            #activsGroups.append( (students[j][1], students[j][3]) )
+    newRequest.requestedGroups = requestedGroups      
+    requestsDict[ ( reqFromOneStudent[i][0], reqFromOneStudent[i][1] )] = newRequest
+
+
+print(requestsDict[('16003', '2897934')].requestedGroups)
 
 # AKTIVNOST = PREDMET npr. NASP 
 # GRUPA     = UCIONA  npr. B4, B2 
@@ -97,6 +119,7 @@ print(groupsDict['140915'].initStudentsCount)
 
 # TODO 1) make binary vector of len(requests) that represents granting or denying of requests, if vec[i] = 0 then 
 # request[i] was not granted, if 1 it was granted   
+#      1.1) Assign random values and check them
 ### MAIN LOOP ###
 # TODO 2) Generate neighbourhood -> pick which way to generate neighbourhood
 # TODO 3) Calculate goal function for each neighbour: 
@@ -109,8 +132,45 @@ print(groupsDict['140915'].initStudentsCount)
 # TODO 4) Select best neighbour based on best goal function and start loop again
 ### END MAIN LOOP ###
 
+vector = [0] * len(requests)
+#print(vector)
+
 # Main loop
 while True:
+
+    for i in range(len(vector)):
+        reqStdId = requests[i][0]
+        reqActId = requests[i][1]
+        reqGrpId = requests[i][2]
+        if vector[i] == 1:  # Ako je 1 idemo provjerit jel se moze taj request dat
+            # Provjera je li već dan request za taj activity 
+            if not requestsDict[ (reqStdId, reqActId) ].granted:
+                # Provjera za overlapping
+                noOverlaps = True
+                for key in studentsDict[ reqStdId ].activityGroupPair:  # groupIDevi u kojima je student valjda
+                    if key != reqActId: # Ignoriramo aktivnost za koju trenutno gledamo
+                        if reqGrpId in groupsDict[key].overlaps:
+                            noOverlaps = False
+                            break
+                if noOverlaps:
+                    # Provjera za broj studenata
+                    # nađemo studenta sa id-jem i onda sa activity id-jem nađemo grupu u kojoj se on trenutno nalazi
+                    currGroup = groupsDict[ studentsDict[ reqStdId ].activityGroupPair[ reqActId ] ]
+                    requestedGroup = groupsDict[reqGrpId]
+                    if requestedGroup.currentStudentCount + 1 <= requestedGroup.max and currGroup.currentStudentCount - 1 >= currGroup.min:
+                        # Moze se napravit zamjena 
+                        # Povecaj broj ljudi u grupi u koju zeli ici
+                        groupsDict[reqGrpId].currentStudentCount += 1
+                        # Smanji broj ljudi u grupi iz koje izlazi
+                        groupsDict[ studentsDict[ reqStdId ].activityGroupPair[ reqActId ] ].currentStudentCount -= 1
+                        # Promijeni studentov raspored 
+                        studentsDict[ reqStdId ].activityGroupPair[ reqActId ] = requestedGroup
+                        requestsDict[ (reqStdId, reqActId) ].granted = True
+        
+        
+            
+
+
 
 
 

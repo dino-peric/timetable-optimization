@@ -1,3 +1,8 @@
+import random 
+
+print(random.sample(range(1, 100), 3))
+
+
 '''
 import argparse, sys
 

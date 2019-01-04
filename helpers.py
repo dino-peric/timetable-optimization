@@ -1,4 +1,5 @@
 import os
+import random 
 
 # Returns file as array, returns file without header + header
 def ReadFileArray(filename):
@@ -31,6 +32,19 @@ def RemoveDifferentElements(a, b):
                 break
     return a
 
+def GenerateNeighbours(vec):
+    indices = random.sample(range(0, len(vec)), 100)
+    neighbours = []
+    for i in indices:
+        neighbour = []
+        if (vec[i] == 0):
+            vec[i] = 1
+        else:
+            vec[i] = 0
+        neighbours.append(neighbour)
+    return neighbours
+    
+
 #class Activity: 
 #    def __init__(self, activityID):
 #        self.activityID = activityID
@@ -59,6 +73,6 @@ class Group:
 class Request:
     def __init__(self, requestID):
         self.requestID = requestID
-        self.studentID = 0 
+        self.requestedGroups = []
         self.reqGroupId = 0
         self.granted = False
