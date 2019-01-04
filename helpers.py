@@ -33,17 +33,32 @@ def RemoveDifferentElements(a, b):
     return a
 
 def GenerateNeighbours(vec):
-    indices = random.sample(range(0, len(vec)), 100)
+    indices = random.sample(range(0, len(vec)), int(len(vec)/3))
+
     neighbours = []
     for i in indices:
+
         neighbour = []
-        if (vec[i] == 0):
-            vec[i] = 1
+        for j in range(0,len(vec)):
+            neighbour.append(vec[j])
+
+        if (neighbour[i] == 0):
+            neighbour[i] = 1
         else:
-            vec[i] = 0
+            neighbour[i] = 0
         neighbours.append(neighbour)
+        
     return neighbours
-    
+
+def Score(students,vec):
+    #Rješenja koja nisu prihvatljiva imaju ukupnu ocjenu 0. 
+    score = 0
+    scoreA = scoreB = scoreC = scoreD = scoreE = 0
+    #TODO
+    #for a in range(0,len(students)):
+    #    if students[a][2]==vec[a]:
+    #        scoreA += students[a][2]
+    return score
 
 #class Activity: 
 #    def __init__(self, activityID):

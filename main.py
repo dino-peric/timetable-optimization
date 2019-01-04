@@ -131,9 +131,17 @@ for i in range(len(reqFromOneStudent)):
 #      1.1) Assign random values and check them
 vector = [0] * len(requests)
 
+# NOT TODO
+#Cisto sam pozivao da provjeravam stvari. Pusti ako ti ne smeta. 
+#print(vector)
+#vector  = GenerateNeighbours(vector)
+#print(vector)
+#Score(students,vector)
+
 # Main loop
 while True:
     # TODO 2) Generate neighbourhood -> pick which way to generate neighbourhood
+    #vector  = GenerateNeighbours(vector)   
 
     for i in range(len(vector)):
         reqStdId = requests[i][0] # studentId in request
@@ -184,4 +192,5 @@ def IsRequestValid(reqStdId, reqActId, reqGrpId):
             if requestedGroup.currentStudentCount + 1 <= requestedGroup.max and currGroup.currentStudentCount - 1 >= currGroup.min:
                 return True
     return False
+
 
