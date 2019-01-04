@@ -33,7 +33,9 @@ overlaps, overlapsHeader = ReadFileArray(overlaps_file)
 
 # Remove elements from requests that are in requests but not in students
 requests = RemoveDifferentElements(requests, students)
-
+for i in range(len(requests)):
+    if requests[i][2] == '140148':
+        print("Found it")
 start = time.time()
 
 # TODO Datoteka overlaps može sadržavati i podatke o grupama koje se ne nalaze u  
@@ -61,31 +63,24 @@ for i in range(len(uniqueStudents)):
     studentsDict[uniqueStudents[i]] = newStudent
 
 studentsDictOrg = studentsDict
-#print(studentsDict['15317'].activityGroupPair)
 
-# Get all unique groups from overlaps file
-uniqueGroups = set()
-for i in range(len(overlaps)):
-    uniqueGroups.add(overlaps[i][0])
-uniqueGroups = list(uniqueGroups)
+groupsDict = {} # Dictionary where key = groupId, value = Group object
+for i in range(len(limits)):
+    groupsDict[limits[i][0]] = Group(limits[i][0])
+    groupsDict[limits[i][0]].initStudentsCount = int(limits[i][1])
+    groupsDict[limits[i][0]].currentStudentCount = int(limits[i][1])            
+    groupsDict[limits[i][0]].minCount = int(limits[i][2])
+    groupsDict[limits[i][0]].minPref = int(limits[i][3])
+    groupsDict[limits[i][0]].max = int(limits[i][4])
+    groupsDict[limits[i][0]].maxPref = int(limits[i][5])
 
-groupsDict = {} # Dictionary where key = groupId, value = Group object, combines LIMITS and OVERLAPS files
-for i in range(len(uniqueGroups)):
+for key in groupsDict:
     overlapsWith = []
-    newGroup = Group(uniqueGroups[i])
-    for j in range(len(overlaps)):                      # Add all overlaps for groups
-        if uniqueGroups[i] == overlaps[j][0]:           # No need for overlaps file from this point
+    for j in range(len(overlaps)):          # Add all overlaps for groups
+        if key == overlaps[j][0]:           # No need for overlaps file from this point
             overlapsWith.append(overlaps[j][1])
-    groupsDict[uniqueGroups[i]] = newGroup
-    groupsDict[uniqueGroups[i]].overlaps = overlapsWith
-    for k in range(len(limits)):                        # Add all limits for groups
-        if limits[k][0] == uniqueGroups[i]:             # No need for limits file from this point
-            groupsDict[uniqueGroups[i]].initStudentsCount = limits[k][1]
-            groupsDict[uniqueGroups[i]].currentStudentCount = limits[k][1]            
-            groupsDict[uniqueGroups[i]].minCount = limits[k][2]
-            groupsDict[uniqueGroups[i]].minPref = limits[k][3]
-            groupsDict[uniqueGroups[i]].max = limits[k][4]
-            groupsDict[uniqueGroups[i]].maxPref = limits[k][5]
+    groupsDict[key].overlaps = overlapsWith
+
 
 #print(len(groupsDict))
 #print(groupsDict['140915'].initStudentsCount)
@@ -111,7 +106,7 @@ for i in range(len(reqFromOneStudent)):
     requestsDict[ ( reqFromOneStudent[i][0], reqFromOneStudent[i][1] )] = newRequest
 
 
-print(requestsDict[('16003', '2897934')].requestedGroups)
+#print(requestsDict[('16003', '2897934')].requestedGroups)
 
 # AKTIVNOST = PREDMET npr. NASP 
 # GRUPA     = UCIONA  npr. B4, B2 
@@ -140,8 +135,6 @@ vector = [0] * len(requests)
 while True:
     # TODO 2) Generate neighbourhood -> pick which way to generate neighbourhood
 
-
-
     for i in range(len(vector)):
         reqStdId = requests[i][0] # studentId in request
         reqActId = requests[i][1] # activityId in request
@@ -166,7 +159,6 @@ while True:
             # Povecati broj ljudi u orginalnoj grupi jer se u nju vraca
             groupsDict[ studentsDict[ reqStdId ].activityGroupPair[ reqActId ] ].currentStudentCount += 1
 
-
     # Timeout check
     end = time.time()
     if end - start > int(timeout):
@@ -174,7 +166,7 @@ while True:
 
 print(end - start)
 
-def IsRequestValid(vector, i, reqStdId, reqActId, reqGrpId):
+def IsRequestValid(reqStdId, reqActId, reqGrpId):
     # Provjera je li već dan request za taj activity 
     if not requestsDict[ (reqStdId, reqActId) ].granted:
         # Provjera za overlapping
