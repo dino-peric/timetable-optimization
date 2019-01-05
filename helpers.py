@@ -32,23 +32,6 @@ def RemoveDifferentElements(a, b):
                 break
     return a
 
-def GenerateNeighbours(vec):
-    indices = random.sample(range(0, len(vec)), int(len(vec)/3))
-
-    neighbours = []
-    for i in indices:
-
-        neighbour = []
-        for j in range(0,len(vec)):
-            neighbour.append(vec[j])
-
-        if (neighbour[i] == 0):
-            neighbour[i] = 1
-        else:
-            neighbour[i] = 0
-        neighbours.append(neighbour)
-        
-    return neighbours
 
 def Score(students,vec):
     #Rješenja koja nisu prihvatljiva imaju ukupnu ocjenu 0. 
@@ -79,7 +62,7 @@ class Group:
         self.overlaps = []
         self.initStudentsCount = 0
         self.currentStudentCount = 0
-        self.minCount = 0  
+        self.min = 0  
         self.minPref = 0 
         self.max = 0 
         self.maxPref = 0

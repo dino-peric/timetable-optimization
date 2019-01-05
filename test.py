@@ -1,6 +1,5 @@
 import random 
 
-print(random.sample(range(1, 100), 3))
 
 
 '''
@@ -38,3 +37,33 @@ for key in groupsDict:
             groupsDict[key].max = limits[j][4]
             groupsDict[key].maxPref = limits[j][5]
 '''
+
+
+
+'''
+    for i in range(len(vector)):
+        reqStdId = requests[i][0] # studentId in request
+        reqActId = requests[i][1] # activityId in request
+        reqGrpId = requests[i][2] # groupId in request
+        if vector[i] == 1:  # Ako je 1 idemo provjerit jel se moze taj request dat
+            if IsRequestValid(reqStdId, reqActId, reqGrpId):
+                # Moze se napravit zamjena -> napravimo ju
+                groupsDict[reqGrpId].currentStudentCount += 1 # Povecaj broj ljudi u grupi u koju zeli ici
+                # Smanji broj ljudi u grupi iz koje izlazi
+                groupsDict[ studentsDict[ reqStdId ].activityGroupPair[ reqActId ] ].currentStudentCount -= 1
+                # Promijeni studentov raspored 
+                studentsDict[ reqStdId ].activityGroupPair[ reqActId ] = groupsDict[reqGrpId]
+                requestsDict[ (reqStdId, reqActId) ].granted = True
+            else:
+                vector[i] = 0 # Request se ne moze napravit, tako da neka bude 0
+        else: 
+            # Ako je vector[i] == 0 onda moramo napravit suprotno
+            # Request nije više granted
+            requestsDict[ (reqStdId, reqActId) ].granted = False
+            # Trebamo ga vratiti u staru grupu
+            studentsDict[ reqStdId ].activityGroupPair[ reqActId ] = studentsDictOrg[ reqStdId ].activityGroupPair[reqActId]
+            # Smanjiti broj ljudi u grupi iz koje izlazi 
+            groupsDict[reqGrpId].currentStudentCount -= 1
+            # Povecati broj ljudi u orginalnoj grupi jer se u nju vraca
+            groupsDict[ studentsDict[ reqStdId ].activityGroupPair[ reqActId ] ].currentStudentCount += 1
+    '''
