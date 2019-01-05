@@ -33,14 +33,22 @@ def RemoveDifferentElements(a, b):
     return a
 
 
-def Score(students,vec):
+def Score(students , requests , vec):
     #Rješenja koja nisu prihvatljiva imaju ukupnu ocjenu 0. 
     score = 0
     scoreA = scoreB = scoreC = scoreD = scoreE = 0
+    scoraA = 0
     #TODO
-    #for a in range(0,len(students)):
-    #    if students[a][2]==vec[a]:
-    #        scoreA += students[a][2]
+    
+    for a in range(0,len(vec)):
+        if vec[a]==1:
+            stID = requests[a][0]
+            acID = requests[a][1]
+            for i in range (0,len(students)):
+                if (students[i][0] == stID and students[i][1] == acID):
+                	scoreA += int(students[i][2])
+    print("Score A " , scoreA)
+    
     return score
 
 #class Activity: 

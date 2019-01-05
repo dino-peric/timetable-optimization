@@ -62,7 +62,7 @@ for i in range(len(uniqueStudents)):
     newStudent.activityGroupPair = activsGroups      
     studentsDict[uniqueStudents[i]] = newStudent
 
-studentsDictOrg = studentsDict
+studentsDictOrg = studentsDict.copy()
 
 groupsDict = {} # Dictionary where key = groupId, value = Group object
 for i in range(len(limits)):
@@ -152,8 +152,11 @@ def GenerateNeighbours(vec):
         reqStdId = requests[i][0] # studentId in request
         reqActId = requests[i][1] # activityId in request
         reqGrpId = requests[i][2] # groupId in request
-        neighbour = vec
-        if (neighbour[i] == 0):  # Zelimo flipat taj bit pa idemo vidit jel moze taj request proć
+        neighbour = vec[:]
+        #neighbour = []
+        #for j in range(0,len(vec)):
+        #    neighbour.append(vec[j])
+        if (neighbour[i] == 0):  # Zelimo flipat taj bit pa idemo vidit jel moze taj request proć           
             if IsRequestValid(reqStdId, reqActId, reqGrpId): # Request može proć
                 # Moze se napravit zamjena -> napravimo ju
                 neighbour[i] = 1
@@ -162,8 +165,9 @@ def GenerateNeighbours(vec):
                 # Smanji broj ljudi u grupi iz koje izlazi
                 groupsDict[ studentsDict[ reqStdId ].activityGroupPair[ reqActId ] ].currentStudentCount -= 1
                 # Promijeni studentov raspored 
-                studentsDict[ reqStdId ].activityGroupPair[ reqActId ] = groupsDict[reqGrpId]
+                studentsDict[ reqStdId ].activityGroupPair[ reqActId ] = groupsDict[reqGrpId].groupID
                 requestsDict[ (reqStdId, reqActId) ].granted = True
+                print(neighbour)
         else: # neighbour[i] = 1 zelimo oduzet taj request
             neighbour[i] = 0
             # Ako je vector[i] == 0 onda moramo napravit suprotno
@@ -175,6 +179,7 @@ def GenerateNeighbours(vec):
             groupsDict[reqGrpId].currentStudentCount -= 1
             # Povecati broj ljudi u orginalnoj grupi jer se u nju vraca, grupu smo zamijenili 2 linije gore
             groupsDict[ studentsDict[ reqStdId ].activityGroupPair[ reqActId ] ].currentStudentCount += 1
+            
         neighbours.append(neighbour)   
     return neighbours
 
@@ -196,11 +201,15 @@ bestVector = vector
 #print(vector)
 #vector  = GenerateNeighbours(vector)
 #print(vector)
-#Score(students,vector)
+probniVektor = [0] * len(requests)
+probniVektor[100] = 1
+probniVektor[150] = 1
+probniVektor[200] = 1
+Score(students , requests , probniVektor)
 
 # Main loop
 while True:
-    neighbours  = GenerateNeighbours(bestVector)   
+    neighbours  = GenerateNeighbours(vector)   
     #for neighbour in neighbours: 
         #for i in neighbour: 
             # TODO Calculate grade
