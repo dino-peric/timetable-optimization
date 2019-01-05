@@ -48,6 +48,7 @@ start = time.time()
 uniqueStudents = set()
 for i in range(len(students)):
     uniqueStudents.add(students[i][0])
+    #uniqueStudents.add(students[i][0],students[i][1],students[i][2])
 uniqueStudents = list(uniqueStudents)
 
 studentsDict = {} # Dictionary where key = studentID, value = Student object
@@ -59,7 +60,9 @@ for i in range(len(uniqueStudents)):
             #activsGroups.append( (students[j][1], students[j][3]) )
             # Get all activity -> group pairs of a student and put it in activsGroups dict
             activsGroups[students[j][1]] = students[j][3]
-    newStudent.activityGroupPair = activsGroups      
+            weight = students[j][2]
+    newStudent.activityGroupPair = activsGroups
+    newStudent.weight = int(weight)      
     studentsDict[uniqueStudents[i]] = newStudent
 
 studentsDictOrg = studentsDict.copy()
@@ -203,9 +206,9 @@ bestVector = vector
 #print(vector)
 probniVektor = [0] * len(requests)
 probniVektor[100] = 1
-probniVektor[150] = 1
+probniVektor[150] = 0
 probniVektor[200] = 1
-Score(students , requests , probniVektor)
+Score(studentsDict , requests , probniVektor , award_activity)
 
 # Main loop
 while True:

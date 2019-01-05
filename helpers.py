@@ -1,5 +1,6 @@
 import os
 import random 
+from collections import Counter
 
 # Returns file as array, returns file without header + header
 def ReadFileArray(filename):
@@ -33,22 +34,45 @@ def RemoveDifferentElements(a, b):
     return a
 
 
-def Score(students , requests , vec):
+def Score(studentsDict , requests , vec, award_activity):
     #Rješenja koja nisu prihvatljiva imaju ukupnu ocjenu 0. 
     score = 0
     scoreA = scoreB = scoreC = scoreD = scoreE = 0
     scoraA = 0
     #TODO
     
+    #Score A
     for a in range(0,len(vec)):
         if vec[a]==1:
             stID = requests[a][0]
             acID = requests[a][1]
-            for i in range (0,len(students)):
-                if (students[i][0] == stID and students[i][1] == acID):
-                	scoreA += int(students[i][2])
+            #for i in range (0,len(students)):
+                #if (students[i][0] == stID and students[i][1] == acID):
+            scoreA += studentsDict[stID].weight
     print("Score A " , scoreA)
+
+    #Score B
+    swapMade = []
+    swapMadePerStudent = []
+    for b in range(0,len(vec)):
+        if vec[b] == 1:
+            swapMade.append(requests[b][0])
+
+    temp = list(set(swapMade))
+    for i in range(0,len(temp)):
+        numPerSt = swapMade.count(temp[i])
+        if numPerSt-1 > len(award_activity):
+            scoreB += int(award_activity[-1])
+        else:
+            scoreB += int(award_activity[numPerSt-1])
+
+    print("Score B " , scoreB)
+
+    #Score C
     
+
+
+    score = scoreA + scoreB + scoreC + scoreD + scoreE
     return score
 
 #class Activity: 
@@ -57,8 +81,10 @@ def Score(students , requests , vec):
 #        self.groups = []
 
 class Student:
+    #def __init__(self, studentID):
     def __init__(self, studentID):
         self.studentID = studentID
+        self.weight = 0
         # Dictionary where key = activityID, value = groupID of that student
         # This is basically the timetable of the student 
         self.activityGroupPair = {}
