@@ -81,6 +81,15 @@ def Score(studentsDict , requests , vec, award_activity,award_student):
         print("Score B " , scoreB)
 
     #Score C
+
+    ### DINO SCORE C ###
+    for i in range(len(vec)):
+        if vec[i] == 1:
+            if studentsDict[ requests[i][0] ].numberOfRequestsGranted == studentsDict[ requests[i][0] ].numberOfRequests:
+               scoreC += 1  
+    scoreC = scoreC * int(award_student) 
+    ### DINO SCORE C ###
+
     numberOfRequestsForStudentDone = []
     numberOfRequestsForStudentGiven = []
     allRequests = []
