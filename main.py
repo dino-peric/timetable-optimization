@@ -148,6 +148,31 @@ def IsRequestValid(reqStdId, reqActId, reqGrpId):
                 return True
     return False
 
+def GrantRequest(arr, index, reqStdId, reqGrpId, reqActId):
+    arr[index] = 1
+    # Povecaj broj ljudi u grupi u koju zeli ici
+    groupsDict[reqGrpId].currentStudentCount += 1
+    # Smanji broj ljudi u grupi iz koje izlazi
+    groupsDict[ studentsDict[ reqStdId ].activityGroupPair[ reqActId ] ].currentStudentCount -= 1
+    # Promijeni studentov raspored 
+    studentsDict[ reqStdId ].activityGroupPair[ reqActId ] = groupsDict[reqGrpId].groupID
+    requestsDict[ (reqStdId, reqActId) ].granted = True
+    return arr
+
+def RevokeRequest(arr, index, reqStdId, reqGrpId, reqActId): 
+    # Micemo request znaci u vectoru mora biti 0
+    arr[index] = 0
+    # Micemo granted jer sad opet mozemo raditi zamjene za tog studenta za tu aktivnost
+    requestsDict[ (reqStdId, reqActId) ].granted = False
+    # Trebamo ga vratiti u staru grupu
+    studentsDict[ reqStdId ].activityGroupPair[ reqActId ] = studentsDictOrg[ reqStdId ].activityGroupPair[reqActId]
+    # Smanjiti broj ljudi u grupi iz koje izlazi 
+    groupsDict[reqGrpId].currentStudentCount -= 1
+    # Povecati broj ljudi u orginalnoj grupi jer se u nju vraca, grupu smo zamijenili 2 linije gore
+    groupsDict[ studentsDict[ reqStdId ].activityGroupPair[ reqActId ] ].currentStudentCount += 1
+    return arr
+            
+
 def GenerateNeighbours(vec):
     indices = random.sample(range(0, len(vec)), int(len(vec)/3))
     neighbours = []
@@ -156,46 +181,28 @@ def GenerateNeighbours(vec):
         reqActId = requests[i][1] # activityId in request
         reqGrpId = requests[i][2] # groupId in request
         neighbour = vec[:]
-        #neighbour = []
-        #for j in range(0,len(vec)):
-        #    neighbour.append(vec[j])
         if (neighbour[i] == 0):  # Zelimo flipat taj bit pa idemo vidit jel moze taj request proć           
             if IsRequestValid(reqStdId, reqActId, reqGrpId): # Request može proć
-                # Moze se napravit zamjena -> napravimo ju
-                neighbour[i] = 1
-                # Povecaj broj ljudi u grupi u koju zeli ici
-                groupsDict[reqGrpId].currentStudentCount += 1
-                # Smanji broj ljudi u grupi iz koje izlazi
-                groupsDict[ studentsDict[ reqStdId ].activityGroupPair[ reqActId ] ].currentStudentCount -= 1
-                # Promijeni studentov raspored 
-                studentsDict[ reqStdId ].activityGroupPair[ reqActId ] = groupsDict[reqGrpId].groupID
-                requestsDict[ (reqStdId, reqActId) ].granted = True
-                print(neighbour)
+                neighbour = GrantRequest(neighbour, i, reqStdId, reqActId, reqGrpId)
         else: # neighbour[i] = 1 zelimo oduzet taj request
-            neighbour[i] = 0
-            # Ako je vector[i] == 0 onda moramo napravit suprotno
-            # Request nije više granted
-            requestsDict[ (reqStdId, reqActId) ].granted = False
-            # Trebamo ga vratiti u staru grupu
-            studentsDict[ reqStdId ].activityGroupPair[ reqActId ] = studentsDictOrg[ reqStdId ].activityGroupPair[reqActId]
-            # Smanjiti broj ljudi u grupi iz koje izlazi 
-            groupsDict[reqGrpId].currentStudentCount -= 1
-            # Povecati broj ljudi u orginalnoj grupi jer se u nju vraca, grupu smo zamijenili 2 linije gore
-            groupsDict[ studentsDict[ reqStdId ].activityGroupPair[ reqActId ] ].currentStudentCount += 1
-            
+            neighbour = RevokeRequest(neighbour, i, reqStdId, reqActId, reqGrpId)
         neighbours.append(neighbour)   
     return neighbours
 
 
 #print ( requestsDict['15097','2023301'].requestedGroups )
-
+counter = 0
 vector = [0] * len(requests)
 for i in range(len(vector)):  # Greedy approach -> Uzmemo maksimum svih zamjena koje možemo napraviti
     reqStdId = requests[i][0] # studentId in request
     reqActId = requests[i][1] # activityId in request
     reqGrpId = requests[i][2] # groupId in request
     if IsRequestValid(reqStdId, reqActId, reqGrpId):
-        vector[i] = 1
+        counter += 1
+        # Moze se napravit zamjena -> napravimo ju
+        vector = GrantRequest(vector, i, reqStdId, reqGrpId, reqActId)
+
+print (counter)
 bestVector = vector
 
 #print (vector)
@@ -208,11 +215,11 @@ probniVektor = [0] * len(requests)
 probniVektor[100] = 1
 probniVektor[150] = 0
 probniVektor[200] = 1
-Score(studentsDict , requests , probniVektor , award_activity)
+#Score(studentsDict , requests , probniVektor , award_activity)
 
 # Main loop
 while True:
-    neighbours  = GenerateNeighbours(vector)   
+    #neighbours  = GenerateNeighbours(vector)   
     #for neighbour in neighbours: 
         #for i in neighbour: 
             # TODO Calculate grade
@@ -227,7 +234,11 @@ while True:
     if end - start > int(timeout):
         break
 
-# TODO output to file
+# output to file
+with open('outStudents.txt', 'w') as f:
+    f.write( studentsHeader[0] + ',' + studentsHeader[1] + ',' + studentsHeader[2] + ',' + studentsHeader[3] + ',' + studentsHeader[4] + '\n')
+    for i in range(len(students)):
+        f.write( students[i][0] + ',' + students[i][1] + ',' + students[i][2] + ',' + students[i][3] + ',' + studentsDict[students[i][0]].activityGroupPair[students[i][1]] + '\n' )
 
 print(end - start)
 
