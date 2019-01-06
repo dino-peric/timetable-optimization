@@ -34,12 +34,13 @@ def RemoveDifferentElements(a, b):
     return a
 
 
-def Score(studentsDict , requests , vec, award_activity):
+def Score(studentsDict , requests , vec, award_activity,award_student):
     #Rješenja koja nisu prihvatljiva imaju ukupnu ocjenu 0. 
     score = 0
     scoreA = scoreB = scoreC = scoreD = scoreE = 0
     scoraA = 0
     #TODO
+    __DEBUG__ = 0
     
     #Score A
     for a in range(0,len(vec)):
@@ -49,7 +50,8 @@ def Score(studentsDict , requests , vec, award_activity):
             #for i in range (0,len(students)):
                 #if (students[i][0] == stID and students[i][1] == acID):
             scoreA += studentsDict[stID].weight
-    print("Score A " , scoreA)
+    if __DEBUG__:
+        print("Score A " , scoreA)
 
     #Score B
     swapMade = []
@@ -66,9 +68,55 @@ def Score(studentsDict , requests , vec, award_activity):
         else:
             scoreB += int(award_activity[numPerSt-1])
 
-    print("Score B " , scoreB)
+    if __DEBUG__:
+        print("Score B " , scoreB)
 
     #Score C
+    numberOfRequestsForStudentDone = []
+    numberOfRequestsForStudentGiven = []
+    allRequests = []
+    allRequestsAc = []
+    resultList = []
+    numberOfRequestsForStudentDoneInActivity = []
+    numberOfRequestsForStudentGivenInActivity = []
+
+    #Svi zahtijevi
+    for c in range(0,len(requests)):
+        allRequests.append(requests[c][0])
+        allRequestsAc.append(requests[c][1])
+    
+    #Liste napravljenih zahtijeva i svih zahtijeva od svakog studenta kojem je napravljena barem jedna zamjena
+    #print(swapMade)
+    #print(allRequests)
+    for c in range(0,len(temp)):
+        #for i in range(0,len())
+        numberOfRequestsForStudentDone.append(swapMade.count(temp[c]))
+        numberOfRequestsForStudentGiven.append(allRequests.count(temp[c]))
+    
+    for i in range (0,len(temp)):
+        tmp = []
+        for c in range(0,len(requests)):
+            if temp[i] == requests[c][0]:
+                tmp.append(requests[c][1])
+        numberOfRequestsForStudentGivenInActivity.append(len(list(set(tmp))))
+    numberOfRequestsForStudentDoneInActivity = numberOfRequestsForStudentDone
+
+    #Provjera rezultata
+    if __DEBUG__:
+        print(numberOfRequestsForStudentDone)
+        print(numberOfRequestsForStudentGiven)
+        print(numberOfRequestsForStudentDoneInActivity)
+        print(numberOfRequestsForStudentGivenInActivity)
+    for c in range(0,len(temp)):
+        if numberOfRequestsForStudentDoneInActivity[c] == numberOfRequestsForStudentGivenInActivity[c]:
+            scoreC += 1
+    
+    scoreC = scoreC * int(award_student)
+    #for c in range(0,len(temp)):
+    #    resultList.append(numberOfRequestsForStudentDone[c] - numberOfRequestsForStudentGiven[c])
+    #Provjera broja aktivnosti
+    if __DEBUG__:
+        print(scoreC)
     
 
 

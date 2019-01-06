@@ -215,7 +215,7 @@ probniVektor = [0] * len(requests)
 probniVektor[100] = 1
 probniVektor[150] = 0
 probniVektor[200] = 1
-#Score(studentsDict , requests , probniVektor , award_activity)
+Score(studentsDict , requests , probniVektor , award_activity , award_student)
 
 # Main loop
 while True:
