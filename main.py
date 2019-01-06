@@ -224,7 +224,7 @@ bestVector = vector
 #vector  = GenerateNeighbours(vector)
 #print(vector)
 #Score(studentsDict , requests , probniVektor , award_activity , award_student)
-
+#print(Score(studentsDict ,groupsDict, requests ,limits, bestVector , award_activity , award_student,minmax_penalty))
 
 
 # Main loop

@@ -34,7 +34,7 @@ def RemoveDifferentElements(a, b):
     return a
 
 
-def Score(studentsDict , requests , vec, award_activity,award_student):
+def Score(studentsDict , groupsDict, requests ,limits, vec, award_activity,award_student,minmax_penalty):
     #Rješenja koja nisu prihvatljiva imaju ukupnu ocjenu 0. 
     score = 0
     scoreA = scoreB = scoreC = scoreD = scoreE = 0
@@ -136,9 +136,21 @@ def Score(studentsDict , requests , vec, award_activity,award_student):
     if __DEBUG__:
         print(scoreC)
     
+    #Score D
+    for d in limits:
+        if groupsDict[d[0]].currentStudentCount < groupsDict[d[0]].minPref:
+            scoreD += (groupsDict[d[0]].minPref - groupsDict[d[0]].currentStudentCount)*int(minmax_penalty)
+            if __DEBUG__:
+                print(scoreD)
 
+    #Score E
+    for e in limits:
+        if groupsDict[e[0]].currentStudentCount > groupsDict[e[0]].maxPref:
+            scoreE += (groupsDict[e[0]].currentStudentCount - groupsDict[e[0]].maxPref)*int(minmax_penalty)
+            if __DEBUG__:
+                print(scoreE)
 
-    score = scoreA + scoreB + scoreC + scoreD + scoreE
+    score = scoreA + scoreB + scoreC - scoreD - scoreE
     return score
 
 #class Activity: 
