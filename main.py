@@ -109,6 +109,13 @@ for i in range(len(reqFromOneStudent)):
     requestsDict[ ( reqFromOneStudent[i][0], reqFromOneStudent[i][1] )] = newRequest
 
 
+# Number of requests for each student for each activity
+for keyStd in studentsDict:
+    for keyReq in requestsDict:
+        if keyStd in keyReq:
+            studentsDict[keyStd].numberOfRequests += 1
+
+
 #print(requestsDict[('16003', '2897934')].requestedGroups)
 
 # AKTIVNOST = PREDMET npr. NASP 
@@ -156,6 +163,9 @@ def GrantRequest(arr, index, reqStdId, reqGrpId, reqActId):
     groupsDict[ studentsDict[ reqStdId ].activityGroupPair[ reqActId ] ].currentStudentCount -= 1
     # Promijeni studentov raspored 
     studentsDict[ reqStdId ].activityGroupPair[ reqActId ] = groupsDict[reqGrpId].groupID
+    ### NEW ###
+    studentsDict[ reqStdId ].numberOfRequestsGranted += 1
+    ### NEW ###
     requestsDict[ (reqStdId, reqActId) ].granted = True
     return arr
 
@@ -164,6 +174,9 @@ def RevokeRequest(arr, index, reqStdId, reqGrpId, reqActId):
     arr[index] = 0
     # Micemo granted jer sad opet mozemo raditi zamjene za tog studenta za tu aktivnost
     requestsDict[ (reqStdId, reqActId) ].granted = False
+    ### NEW ###
+    studentsDict[ reqStdId ].numberOfRequestsGranted -= 1
+    ### NEW ###
     # Trebamo ga vratiti u staru grupu
     studentsDict[ reqStdId ].activityGroupPair[ reqActId ] = studentsDictOrg[ reqStdId ].activityGroupPair[reqActId]
     # Smanjiti broj ljudi u grupi iz koje izlazi 
@@ -193,7 +206,7 @@ def GenerateNeighbours(vec):
 #print ( requestsDict['15097','2023301'].requestedGroups )
 counter = 0
 vector = [0] * len(requests)
-for i in range(len(vector)):  # Greedy approach -> Uzmemo maksimum svih zamjena koje možemo napraviti
+for i in range(20):  # Greedy approach -> Uzmemo maksimum svih zamjena koje možemo napraviti
     reqStdId = requests[i][0] # studentId in request
     reqActId = requests[i][1] # activityId in request
     reqGrpId = requests[i][2] # groupId in request
@@ -201,8 +214,7 @@ for i in range(len(vector)):  # Greedy approach -> Uzmemo maksimum svih zamjena 
         counter += 1
         # Moze se napravit zamjena -> napravimo ju
         vector = GrantRequest(vector, i, reqStdId, reqGrpId, reqActId)
-
-print (counter)
+print(counter)
 bestVector = vector
 
 #print (vector)
@@ -211,11 +223,9 @@ bestVector = vector
 #print(vector)
 #vector  = GenerateNeighbours(vector)
 #print(vector)
-probniVektor = [0] * len(requests)
-probniVektor[100] = 1
-probniVektor[150] = 0
-probniVektor[200] = 1
-Score(studentsDict , requests , probniVektor , award_activity , award_student)
+#Score(studentsDict , requests , probniVektor , award_activity , award_student)
+
+
 
 # Main loop
 while True:
@@ -238,6 +248,8 @@ while True:
 with open('outStudents.txt', 'w') as f:
     f.write( studentsHeader[0] + ',' + studentsHeader[1] + ',' + studentsHeader[2] + ',' + studentsHeader[3] + ',' + studentsHeader[4] + '\n')
     for i in range(len(students)):
+        if students[i][3] != studentsDict[students[i][0]].activityGroupPair[students[i][1]]:
+            print (students[i][3], studentsDict[students[i][0]].activityGroupPair[students[i][1]] )
         f.write( students[i][0] + ',' + students[i][1] + ',' + students[i][2] + ',' + students[i][3] + ',' + studentsDict[students[i][0]].activityGroupPair[students[i][1]] + '\n' )
 
 print(end - start)

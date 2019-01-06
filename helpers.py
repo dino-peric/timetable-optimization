@@ -54,6 +54,15 @@ def Score(studentsDict , requests , vec, award_activity,award_student):
         print("Score A " , scoreA)
 
     #Score B
+    ### DINO SCORE B ###
+    for i in range(len(vec)):
+        if vec[i] == 1:
+            if studentsDict[ requests[i][0] ].numberOfRequestsGranted - 1 > len(award_activity):
+                scoreB += int(award_activity[-1])
+            else:
+                scoreB += int(award_activity[studentsDict[ requests[i][0] ].numberOfRequestsGranted])
+    ### DINO SCORE B ###
+
     swapMade = []
     swapMadePerStudent = []
     for b in range(0,len(vec)):
@@ -136,6 +145,8 @@ class Student:
         # Dictionary where key = activityID, value = groupID of that student
         # This is basically the timetable of the student 
         self.activityGroupPair = {}
+        self.numberOfRequests = 0
+        self.numberOfRequestsGranted = 0
 
 class Group:
     def __init__(self, groupID):
