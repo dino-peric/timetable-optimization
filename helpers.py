@@ -87,22 +87,26 @@ def RevokeRequest(arr, index, reqStdId, reqGrpId, reqActId, requestsDict, groups
     return arr       
 
 def GenerateNeighbours(vec, requests, requestsDict, groupsDict, studentsDict, studentsDictOrg):
-    indices = random.sample(range(0, len(vec)), int(len(vec)/3))
+    # '''int(len(vec)/3)'''
+    indices = random.sample(range(0, len(vec)), int(len(vec)))
     neighbours = []
     for i in indices:
         reqStdId = requests[i][0] # studentId in request
         reqActId = requests[i][1] # activityId in request
         reqGrpId = requests[i][2] # groupId in request
         neighbour = vec[:]
-        if (neighbour[i] == 0):  # Zelimo flipat taj bit pa idemo vidit jel moze taj request proć           
+        if (neighbour[i] == 0):  # Zelimo flipat taj bit pa idemo vidit jel moze taj request proć         
             if IsRequestValid(reqStdId, reqActId, reqGrpId, requestsDict, groupsDict, studentsDict): # Request može proć
+                #print("give me my nigga")
                 neighbour = GrantRequest(neighbour, i, reqStdId, reqGrpId, reqActId, requestsDict, groupsDict, studentsDict)
+                #neighbours.append(neighbour)
         else: # neighbour[i] = 1 zelimo oduzet taj request
+            #print("take my nigga away")
             neighbour = RevokeRequest(neighbour, i, reqStdId, reqGrpId, reqActId, requestsDict, groupsDict, studentsDict, studentsDictOrg)
-        neighbours.append(neighbour)   
+        neighbours.append(neighbour)
     return neighbours
 
-def Score(studentsDict, groupsDict, requests, limits, vec, award_activity, award_student, minmax_penalty):
+def Score(vec, studentsDict, groupsDict, requests, limits, award_activity, award_student, minmax_penalty):
     score = 0
     scoreA = scoreB = scoreC = scoreD = scoreE = 0  
     for i in range(len(vec)):
@@ -112,7 +116,7 @@ def Score(studentsDict, groupsDict, requests, limits, vec, award_activity, award
             # Score B
             if studentsDict[ requests[i][0] ].numberOfRequestsGranted - 1 >= len(award_activity):
                 scoreB += int(award_activity[-1])
-            else:
+            elif studentsDict[ requests[i][0] ].numberOfRequestsGranted - 1 > 0:
                 scoreB += int(award_activity[ studentsDict[ requests[i][0] ].numberOfRequestsGranted - 1 ])      
             # Score C
             if studentsDict[ requests[i][0] ].numberOfRequestsGranted == studentsDict[ requests[i][0] ].numberOfRequests:
@@ -125,6 +129,7 @@ def Score(studentsDict, groupsDict, requests, limits, vec, award_activity, award
             if groupsDict[ requests[i][2] ].currentStudentCount > groupsDict[ requests[i][2] ].maxPref:
                 scoreE += (groupsDict[ requests[i][2] ].currentStudentCount - groupsDict[ requests[i][2] ].maxPref) * minmax_penalty
             '''
+            
     for key in groupsDict: # Loop through all groups :'(
         # Score D
         if groupsDict[key].currentStudentCount < groupsDict[key].minPref:
@@ -132,7 +137,7 @@ def Score(studentsDict, groupsDict, requests, limits, vec, award_activity, award
         # Score E
         if groupsDict[key].currentStudentCount > groupsDict[key].maxPref:
             scoreE += (groupsDict[key].currentStudentCount - groupsDict[key].maxPref) * minmax_penalty
-
+    
     score = scoreA + scoreB + scoreC - scoreD - scoreE
     return score
 

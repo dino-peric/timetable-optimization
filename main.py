@@ -104,7 +104,10 @@ for keyStd in studentsDict:
 
 counter = 0
 vector = [0] * len(requests)
-for i in range(len(vector)):  # Greedy approach -> Uzmemo maksimum svih zamjena koje možemo napraviti
+
+indices = random.sample(range(0, len(vector)), int(len(vector)/5))
+
+for i in indices:  # Greedy approach -> greedy approach puši ogromnu kitu nećemo ić s njim
     reqStdId = requests[i][0] # studentId in request
     reqActId = requests[i][1] # activityId in request
     reqGrpId = requests[i][2] # groupId in request
@@ -117,16 +120,29 @@ for i in range(len(vector)):  # Greedy approach -> Uzmemo maksimum svih zamjena 
 print(counter)
 bestVector = vector
 
-print(Score(studentsDict, groupsDict, requests, limits, bestVector, award_activity, award_student, minmax_penalty))
+#print(Score(vector, studentsDict, groupsDict, requests, limits, award_activity, award_student, minmax_penalty))
 
-
+neighbours = []
+bestNeighbour = vector[:]
+neighbour = vector[:]
+counter = 0
 # Main loop
 while True:
-    #neighbours  = GenerateNeighbours(neighbours, requests, requestsDict, groupsDict, studentsDict, studentsDictOrg)  
-    #for neighbour in neighbours: 
-        #for i in neighbour: 
-            # TODO Calculate grade
-                #print('')
+    scores = []
+    neighbours  = GenerateNeighbours(bestNeighbour, requests, requestsDict, groupsDict, studentsDict, studentsDictOrg)  
+    for neighbour in neighbours: 
+        scores.append( Score( bestNeighbour, studentsDict, groupsDict, requests, limits, award_activity, award_student, minmax_penalty ) ) 
+    if len(scores) > 0:
+        bestNeighbourIndex = scores.index( max(scores) )
+    #print(neighbour.count(1))
+    #print(scores)
+    #print(bestNeighbourIndex)
+    #print("=============")
+    bestNeighbour = neighbours[bestNeighbourIndex]
+    counter += 1
+    #if counter % 10 == 0:
+    print(max(scores))
+
 
     # TODO Pick best neighbour and make him new 
     #bestVector = neighbours[i]
