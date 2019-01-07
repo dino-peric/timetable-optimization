@@ -5,6 +5,26 @@ scores = [1, 2, 3, 5, 4]
 bestNeighbourIndex = scores.index( max(scores) )
 print(bestNeighbourIndex)
 
+# '''int(len(vec)/3)'''
+neighbours = []
+for i in range(10):
+    reqStdId = requests[i][0] # studentId in request
+    reqActId = requests[i][1] # activityId in request
+    reqGrpId = requests[i][2] # groupId in request
+    neighbour = vec[:]
+    if (neighbour[i] == 0):  # Zelimo flipat taj bit pa idemo vidit jel moze taj request proć         
+        if IsRequestValid(reqStdId, reqActId, reqGrpId, requestsDict, groupsDict, studentsDict): # Request može proć
+            #print("give me my nigga")
+            neighbour = GrantRequest(neighbour, i, reqStdId, reqGrpId, reqActId, requestsDict, groupsDict, studentsDict)
+            neighbours.append(neighbour)
+    else: # neighbour[i] = 1 zelimo oduzet taj request
+        #print("take my nigga away")
+        neighbour = RevokeRequest(neighbour, i, reqStdId, reqGrpId, reqActId, requestsDict, groupsDict, studentsDict, studentsDictOrg)
+        neighbours.append(neighbour)
+
+print(neighbours)
+
+
 
 '''
 import argparse, sys

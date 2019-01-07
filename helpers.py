@@ -86,10 +86,10 @@ def RevokeRequest(arr, index, reqStdId, reqGrpId, reqActId, requestsDict, groups
     groupsDict[ studentsDict[ reqStdId ].activityGroupPair[ reqActId ] ].currentStudentCount += 1
     return arr       
 
-def GenerateNeighbours(vec, requests, requestsDict, groupsDict, studentsDict, studentsDictOrg):
-    # '''int(len(vec)/3)'''
+def GenerateNeighbours(vec, requests, requestsDict, groupsDict, studentsDict, studentsDictOrg, limits, award_activity, award_student, minmax_penalty):
     indices = random.sample(range(0, len(vec)), int(len(vec)))
     neighbours = []
+    bestScore = -10000
     for i in indices:
         reqStdId = requests[i][0] # studentId in request
         reqActId = requests[i][1] # activityId in request
@@ -98,13 +98,36 @@ def GenerateNeighbours(vec, requests, requestsDict, groupsDict, studentsDict, st
         if (neighbour[i] == 0):  # Zelimo flipat taj bit pa idemo vidit jel moze taj request proć         
             if IsRequestValid(reqStdId, reqActId, reqGrpId, requestsDict, groupsDict, studentsDict): # Request može proć
                 #print("give me my nigga")
-                neighbour = GrantRequest(neighbour, i, reqStdId, reqGrpId, reqActId, requestsDict, groupsDict, studentsDict)
-                #neighbours.append(neighbour)
+                #neighbour = GrantRequest(neighbour, i, reqStdId, reqGrpId, reqActId, requestsDict, groupsDict, studentsDict)
+                neighbours.append((neighbour, i))
         else: # neighbour[i] = 1 zelimo oduzet taj request
             #print("take my nigga away")
-            neighbour = RevokeRequest(neighbour, i, reqStdId, reqGrpId, reqActId, requestsDict, groupsDict, studentsDict, studentsDictOrg)
-        neighbours.append(neighbour)
-    return neighbours
+            #neighbour = RevokeRequest(neighbour, i, reqStdId, reqGrpId, reqActId, requestsDict, groupsDict, studentsDict, studentsDictOrg)
+            neighbours.append((neighbour, i))
+    
+    scores = []
+    for neighbour in neighbours: 
+        currentScore = Score( neighbour[0][:], studentsDict, groupsDict, requests, limits, award_activity, award_student, minmax_penalty )
+        if currentScore >= bestScore:
+            scores.append( currentScore )
+
+    if len(scores) > 0:
+        print(max(scores))
+    bestScore = max(scores)
+    bestNeigbourIndex = scores.index( bestScore )
+    bestNeighbour = neighbours[ bestNeigbourIndex ][0][:]
+
+    if (bestNeighbour[i] == 0):  # Zelimo flipat taj bit pa idemo vidit jel moze taj request proć         
+        if IsRequestValid(reqStdId, reqActId, reqGrpId, requestsDict, groupsDict, studentsDict): # Request može proć
+        #print("give me my nigga")
+            bestNeighbour = GrantRequest(bestNeighbour, i, reqStdId, reqGrpId, reqActId, requestsDict, groupsDict, studentsDict)
+    else: # neighbour[i] = 1 zelimo oduzet taj request
+        #print("take my nigga away")
+        bestNeighbour = RevokeRequest(bestNeighbour, i, reqStdId, reqGrpId, reqActId, requestsDict, groupsDict, studentsDict, studentsDictOrg)
+
+    return bestNeighbour
+
+
 
 def Score(vec, studentsDict, groupsDict, requests, limits, award_activity, award_student, minmax_penalty):
     score = 0
@@ -141,6 +164,11 @@ def Score(vec, studentsDict, groupsDict, requests, limits, award_activity, award
     score = scoreA + scoreB + scoreC - scoreD - scoreE
     return score
 
+def ReturnBestNeighbour(vec, requests, requestsDict, groupsDict, studentsDict, studentsDictOrg, limits, award_activity, award_student, minmax_penalty):
+    neighbours = GenerateNeighbours(vec, requests, requestsDict, groupsDict, studentsDict, studentsDictOrg)
+
+
+
 class Student:
     def __init__(self, studentID):
         self.studentID = studentID
@@ -170,3 +198,5 @@ class Request:
         self.requestedGroups = []
         self.reqGroupId = 0
         self.granted = False
+
+
