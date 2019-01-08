@@ -2,6 +2,9 @@ import numpy as np
 from helpers import *
 import argparse, sys
 import time 
+#import asyncio
+#import queue
+from collections import deque
 
 # Command line arguments
 parser = argparse.ArgumentParser()
@@ -124,10 +127,12 @@ bestNeighbour = vector[:]
 counter = 0
 printed = False
 
-
+#queue = asyncio.Queue(maxsize=15)
+queue = deque()
+queue.clear()
 # Main loop
 while True:
-    bestNeighbour = GenerateNeighbours(bestNeighbour, requests, requestsDict, groupsDict, studentsDict, studentsDictOrg, limits, award_activity, award_student, minmax_penalty)  
+    bestNeighbour , queue = GenerateNeighbours(bestNeighbour, requests, requestsDict, groupsDict, studentsDict, studentsDictOrg, limits, award_activity, award_student, minmax_penalty,queue)  
     #bestNeigbour = GetBestNeighbour(neighbours)
     #neighbours.append(bestNeighbour)
     #for neighbour in neighbours: 

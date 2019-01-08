@@ -111,36 +111,57 @@ def RevokeRequest(arr, index, reqStdId, reqGrpId, reqActId, requestsDict, groups
     groupsDict[ studentsDict[ reqStdId ].activityGroupPair[ reqActId ] ].currentStudentCount += 1
     return arr       
 
-def GenerateNeighbours(vec, requests, requestsDict, groupsDict, studentsDict, studentsDictOrg, limits, award_activity, award_student, minmax_penalty):
-    indices = random.sample(range(0, len(vec)), int(len(vec)/5))
+def GenerateNeighbours(vec, requests, requestsDict, groupsDict, studentsDict, studentsDictOrg, limits, award_activity, award_student, minmax_penalty,queue):
+    indices = random.sample(range(0, len(vec)), int(len(vec)/15))
     neighbours = []
     bestScore = -1000
+    queueList = list(queue)
+    #print(queueList)
     for i in indices:
-        reqStdId = requests[i][0] # studentId in request
-        reqActId = requests[i][1] # activityId in request
-        reqGrpId = requests[i][2] # groupId in request
-        neighbour = vec[:]
-        if (neighbour[i] == 0):  # Zelimo flipat taj bit pa idemo vidit jel moze taj request proć         
-            if IsRequestValid(reqStdId, reqActId, reqGrpId, requestsDict, groupsDict, studentsDict): # Request može proć
-                #neighbour = GrantRequest(neighbour, i, reqStdId, reqGrpId, reqActId, requestsDict, groupsDict, studentsDict)
-                neighbours.append((neighbour, i))
-        else: # neighbour[i] = 1 zelimo oduzet taj request
-            #neighbour = RevokeRequest(neighbour, i, reqStdId, reqGrpId, reqActId, requestsDict, groupsDict, studentsDict, studentsDictOrg)
-            if IsRequestRevokable(reqStdId, reqActId, reqGrpId, requestsDict, groupsDict, studentsDict, studentsDictOrg):
-                neighbours.append((neighbour, i))
+        if i not in queueList:
+            reqStdId = requests[i][0] # studentId in request
+            reqActId = requests[i][1] # activityId in request
+            reqGrpId = requests[i][2] # groupId in request
+            #neighbour = vec[:]
+            neighbour = []
+            for j in range (0, len(vec)):
+                neighbour.append(vec[j])
+
+            if (neighbour[i] == 0):  # Zelimo flipat taj bit pa idemo vidit jel moze taj request proć         
+                if IsRequestValid(reqStdId, reqActId, reqGrpId, requestsDict, groupsDict, studentsDict): # Request može proć
+                    #neighbour = GrantRequest(neighbour, i, reqStdId, reqGrpId, reqActId, requestsDict, groupsDict, studentsDict)
+                    neighbour[i] = 1
+                    neighbours.append((neighbour, i))
+            else: # neighbour[i] = 1 zelimo oduzet taj request
+                #neighbour = RevokeRequest(neighbour, i, reqStdId, reqGrpId, reqActId, requestsDict, groupsDict, studentsDict, studentsDictOrg)
+                if IsRequestRevokable(reqStdId, reqActId, reqGrpId, requestsDict, groupsDict, studentsDict, studentsDictOrg):
+                    neighbour[i] = 0
+                    neighbours.append((neighbour, i))
 
     scores = []
+    scores2 = []
     #scores.append(bestScore)
     for neighbour in neighbours: 
         currentScore = Score( neighbour[0][:], studentsDict, groupsDict, requests, limits, award_activity, award_student, minmax_penalty )
         #if currentScore >= bestScore:
         scores.append( currentScore )
+        scores2.append(neighbour[1])
 
+    #if bestScore < max(scores):
     bestScore = max(scores)
     bestNeigbourIndex = scores.index( bestScore )
+    bestScoreIndex = scores2[scores.index( bestScore )]
+    #print("bestNeigbourIndex: ",bestNeigbourIndex )
     bestNeighbourBitFlippedIndex = neighbours[ bestNeigbourIndex ][1]
     
     bestNeighbour = neighbours[ bestNeigbourIndex ][0][:]
+
+    #Dodavanje najboljeg susjeda u tabu listu
+    if len(queue) >= 5:
+        queue.popleft()
+        queue.append(bestScoreIndex)
+    else:
+        queue.append(bestScoreIndex)
 
     reqStdId = requests[bestNeighbourBitFlippedIndex][0] # studentId in request
     reqActId = requests[bestNeighbourBitFlippedIndex][1] # activityId in request
@@ -152,7 +173,7 @@ def GenerateNeighbours(vec, requests, requestsDict, groupsDict, studentsDict, st
         bestNeighbour = RevokeRequest(bestNeighbour, bestNeighbourBitFlippedIndex, reqStdId, reqGrpId, reqActId, requestsDict, groupsDict, studentsDict, studentsDictOrg)
         if len(scores) > 0:
             print(max(scores), bestNeighbour.count(1))
-    return bestNeighbour
+    return bestNeighbour, queue
 
 
 '''
