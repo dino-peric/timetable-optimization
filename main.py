@@ -33,9 +33,6 @@ overlaps, overlapsHeader = ReadFileArray(overlaps_file)
 
 # Remove elements from requests that are in requests but not in students
 requests = RemoveDifferentElements(requests, students)
-for i in range(len(requests)):
-    if requests[i][2] == '140148':
-        print("Found it")
 start = time.time()
 
 # TODO Datoteka overlaps može sadržavati i podatke o grupama koje se ne nalaze u  
@@ -130,7 +127,8 @@ printed = False
 
 # Main loop
 while True:
-    neighbours  = GenerateNeighbours(bestNeighbour, requests, requestsDict, groupsDict, studentsDict, studentsDictOrg, limits, award_activity, award_student, minmax_penalty)  
+    bestNeighbour = GenerateNeighbours(bestNeighbour, requests, requestsDict, groupsDict, studentsDict, studentsDictOrg, limits, award_activity, award_student, minmax_penalty)  
+    #bestNeigbour = GetBestNeighbour(neighbours)
     #neighbours.append(bestNeighbour)
     #for neighbour in neighbours: 
         #scores.append( Score( neighbour[:], studentsDict, groupsDict, requests, limits, award_activity, award_student, minmax_penalty ) ) 

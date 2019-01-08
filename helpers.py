@@ -60,6 +60,31 @@ def IsRequestValid(reqStdId, reqActId, reqGrpId, requestsDict, groupsDict, stude
                 return True
     return False
 
+def IsRequestRevokable(reqStdId, reqActId, reqGrpId, requestsDict, groupsDict, studentsDict, studentsDictOrg):
+    # Provjera je li već dan request za taj activity 
+    if requestsDict[ (reqStdId, reqActId) ].granted:
+
+        # 1. Provjeri staru grupu da li ima mjesta u njoj
+        # 2. Provjeri da li se sa promjenom u staru grupu događa kakav overlap
+        orgGroupId = groupsDict[ studentsDictOrg[ reqStdId ].activityGroupPair[reqActId]].groupID
+
+        # Provjera za overlapping
+        noOverlaps = True
+        for key in studentsDict[ reqStdId ].activityGroupPair:  # groupIDevi u kojima je student valjda
+            if key != reqActId: # Ignoriramo aktivnost za koju trenutno gledamo
+                if orgGroupId in groupsDict[ studentsDict[ reqStdId ].activityGroupPair[key]].overlaps:
+                    noOverlaps = False
+                    break
+
+        if noOverlaps:
+            # Provjera za broj studenata
+            # nađemo studenta sa id-jem i onda sa activity id-jem nađemo grupu u kojoj se on trenutno nalazi
+            currGroup = groupsDict[ studentsDict[ reqStdId ].activityGroupPair[ reqActId ] ]
+            requestedGroup = groupsDict[reqGrpId]
+            if requestedGroup.currentStudentCount + 1 <= requestedGroup.max and currGroup.currentStudentCount - 1 >= currGroup.min:
+                return True
+    return False
+
 def GrantRequest(arr, index, reqStdId, reqGrpId, reqActId, requestsDict, groupsDict, studentsDict):
     arr[index] = 1
     # Povecaj broj ljudi u grupi u koju zeli ici
@@ -87,9 +112,9 @@ def RevokeRequest(arr, index, reqStdId, reqGrpId, reqActId, requestsDict, groups
     return arr       
 
 def GenerateNeighbours(vec, requests, requestsDict, groupsDict, studentsDict, studentsDictOrg, limits, award_activity, award_student, minmax_penalty):
-    indices = random.sample(range(0, len(vec)), int(len(vec)))
+    indices = random.sample(range(0, len(vec)), int(len(vec)/5))
     neighbours = []
-    bestScore = -10000
+    bestScore = -1000
     for i in indices:
         reqStdId = requests[i][0] # studentId in request
         reqActId = requests[i][1] # activityId in request
@@ -97,14 +122,42 @@ def GenerateNeighbours(vec, requests, requestsDict, groupsDict, studentsDict, st
         neighbour = vec[:]
         if (neighbour[i] == 0):  # Zelimo flipat taj bit pa idemo vidit jel moze taj request proć         
             if IsRequestValid(reqStdId, reqActId, reqGrpId, requestsDict, groupsDict, studentsDict): # Request može proć
-                #print("give me my nigga")
                 #neighbour = GrantRequest(neighbour, i, reqStdId, reqGrpId, reqActId, requestsDict, groupsDict, studentsDict)
                 neighbours.append((neighbour, i))
         else: # neighbour[i] = 1 zelimo oduzet taj request
-            #print("take my nigga away")
             #neighbour = RevokeRequest(neighbour, i, reqStdId, reqGrpId, reqActId, requestsDict, groupsDict, studentsDict, studentsDictOrg)
-            neighbours.append((neighbour, i))
+            if IsRequestRevokable(reqStdId, reqActId, reqGrpId, requestsDict, groupsDict, studentsDict, studentsDictOrg):
+                neighbours.append((neighbour, i))
+
+    scores = []
+    #scores.append(bestScore)
+    for neighbour in neighbours: 
+        currentScore = Score( neighbour[0][:], studentsDict, groupsDict, requests, limits, award_activity, award_student, minmax_penalty )
+        #if currentScore >= bestScore:
+        scores.append( currentScore )
+
+    bestScore = max(scores)
+    bestNeigbourIndex = scores.index( bestScore )
+    bestNeighbourBitFlippedIndex = neighbours[ bestNeigbourIndex ][1]
     
+    bestNeighbour = neighbours[ bestNeigbourIndex ][0][:]
+
+    reqStdId = requests[bestNeighbourBitFlippedIndex][0] # studentId in request
+    reqActId = requests[bestNeighbourBitFlippedIndex][1] # activityId in request
+    reqGrpId = requests[bestNeighbourBitFlippedIndex][2] # groupId in request
+    
+    if ( bestNeighbour[bestNeighbourBitFlippedIndex] == 0 ):  # Zelimo flipat taj bit pa idemo vidit jel moze taj request proć         
+        bestNeighbour = GrantRequest(bestNeighbour, bestNeighbourBitFlippedIndex, reqStdId, reqGrpId, reqActId, requestsDict, groupsDict, studentsDict)
+    else: # neighbour[i] = 1 zelimo oduzet taj request
+        bestNeighbour = RevokeRequest(bestNeighbour, bestNeighbourBitFlippedIndex, reqStdId, reqGrpId, reqActId, requestsDict, groupsDict, studentsDict, studentsDictOrg)
+        if len(scores) > 0:
+            print(max(scores), bestNeighbour.count(1))
+    return bestNeighbour
+
+
+'''
+def GetBestNeighbour(vec, requests, requestsDict, groupsDict, studentsDict, studentsDictOrg, limits, award_activity, award_student, minmax_penalty):
+    neighbours = GenerateNeighbours(vec, requests, requestsDict, groupsDict, studentsDict, studentsDictOrg, limits, award_activity, award_student, minmax_penalty)
     scores = []
     for neighbour in neighbours: 
         currentScore = Score( neighbour[0][:], studentsDict, groupsDict, requests, limits, award_activity, award_student, minmax_penalty )
@@ -126,8 +179,7 @@ def GenerateNeighbours(vec, requests, requestsDict, groupsDict, studentsDict, st
         bestNeighbour = RevokeRequest(bestNeighbour, i, reqStdId, reqGrpId, reqActId, requestsDict, groupsDict, studentsDict, studentsDictOrg)
 
     return bestNeighbour
-
-
+'''
 
 def Score(vec, studentsDict, groupsDict, requests, limits, award_activity, award_student, minmax_penalty):
     score = 0
@@ -163,10 +215,6 @@ def Score(vec, studentsDict, groupsDict, requests, limits, award_activity, award
     
     score = scoreA + scoreB + scoreC - scoreD - scoreE
     return score
-
-def ReturnBestNeighbour(vec, requests, requestsDict, groupsDict, studentsDict, studentsDictOrg, limits, award_activity, award_student, minmax_penalty):
-    neighbours = GenerateNeighbours(vec, requests, requestsDict, groupsDict, studentsDict, studentsDictOrg)
-
 
 
 class Student:
