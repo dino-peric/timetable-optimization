@@ -86,7 +86,7 @@ def IsRequestRevokable(reqStdId, reqActId, reqGrpId, requestsDict, groupsDict, s
     return False
 
 def GrantRequest(arr, index, reqStdId, reqGrpId, reqActId, requestsDict, groupsDict, studentsDict):
-    arr[index] = 1
+    #arr[index] = 1
     # Povecaj broj ljudi u grupi u koju zeli ici
     groupsDict[reqGrpId].currentStudentCount += 1
     # Smanji broj ljudi u grupi iz koje izlazi
@@ -99,7 +99,7 @@ def GrantRequest(arr, index, reqStdId, reqGrpId, reqActId, requestsDict, groupsD
 
 def RevokeRequest(arr, index, reqStdId, reqGrpId, reqActId, requestsDict, groupsDict, studentsDict, studentsDictOrg): 
     # Micemo request znaci u vectoru mora biti 0
-    arr[index] = 0
+    #arr[index] = 0
     # Micemo granted jer sad opet mozemo raditi zamjene za tog studenta za tu aktivnost
     requestsDict[ (reqStdId, reqActId) ].granted = False
     studentsDict[ reqStdId ].numberOfRequestsGranted -= 1
@@ -122,10 +122,7 @@ def GenerateNeighbours(vec, requests, requestsDict, groupsDict, studentsDict, st
             reqStdId = requests[i][0] # studentId in request
             reqActId = requests[i][1] # activityId in request
             reqGrpId = requests[i][2] # groupId in request
-            #neighbour = vec[:]
-            neighbour = []
-            for j in range (0, len(vec)):
-                neighbour.append(vec[j])
+            neighbour = vec[:]
 
             if (neighbour[i] == 0):  # Zelimo flipat taj bit pa idemo vidit jel moze taj request proć         
                 if IsRequestValid(reqStdId, reqActId, reqGrpId, requestsDict, groupsDict, studentsDict): # Request može proć
@@ -137,42 +134,42 @@ def GenerateNeighbours(vec, requests, requestsDict, groupsDict, studentsDict, st
                 if IsRequestRevokable(reqStdId, reqActId, reqGrpId, requestsDict, groupsDict, studentsDict, studentsDictOrg):
                     neighbour[i] = 0
                     neighbours.append((neighbour, i))
+            
 
     scores = []
-    scores2 = []
     #scores.append(bestScore)
     for neighbour in neighbours: 
         currentScore = Score( neighbour[0][:], studentsDict, groupsDict, requests, limits, award_activity, award_student, minmax_penalty )
         #if currentScore >= bestScore:
         scores.append( currentScore )
-        scores2.append(neighbour[1])
+        #scores2.append(neighbour[1])
 
     #if bestScore < max(scores):
     bestScore = max(scores)
     bestNeigbourIndex = scores.index( bestScore )
-    bestScoreIndex = scores2[scores.index( bestScore )]
-    #print("bestNeigbourIndex: ",bestNeigbourIndex )
+    #bestScoreIndex = scores2[scores.index( bestScore )]
+    #print(scores )
     bestNeighbourBitFlippedIndex = neighbours[ bestNeigbourIndex ][1]
     
     bestNeighbour = neighbours[ bestNeigbourIndex ][0][:]
 
     #Dodavanje najboljeg susjeda u tabu listu
-    if len(queue) >= 5:
+    if len(queue) >= 10:
         queue.popleft()
-        queue.append(bestScoreIndex)
+        queue.append(bestNeighbourBitFlippedIndex)
     else:
-        queue.append(bestScoreIndex)
+        queue.append(bestNeighbourBitFlippedIndex)
 
     reqStdId = requests[bestNeighbourBitFlippedIndex][0] # studentId in request
     reqActId = requests[bestNeighbourBitFlippedIndex][1] # activityId in request
     reqGrpId = requests[bestNeighbourBitFlippedIndex][2] # groupId in request
     
-    if ( bestNeighbour[bestNeighbourBitFlippedIndex] == 0 ):  # Zelimo flipat taj bit pa idemo vidit jel moze taj request proć         
+    if ( bestNeighbour[bestNeighbourBitFlippedIndex] == 1 ):  # Zelimo flipat taj bit pa idemo vidit jel moze taj request proć         
         bestNeighbour = GrantRequest(bestNeighbour, bestNeighbourBitFlippedIndex, reqStdId, reqGrpId, reqActId, requestsDict, groupsDict, studentsDict)
     else: # neighbour[i] = 1 zelimo oduzet taj request
         bestNeighbour = RevokeRequest(bestNeighbour, bestNeighbourBitFlippedIndex, reqStdId, reqGrpId, reqActId, requestsDict, groupsDict, studentsDict, studentsDictOrg)
-        if len(scores) > 0:
-            print(max(scores), bestNeighbour.count(1))
+    if len(scores) > 0:
+        print(max(scores), bestNeighbour.count(1))
     return bestNeighbour, queue
 
 

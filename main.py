@@ -105,7 +105,7 @@ for keyStd in studentsDict:
 counter = 0
 vector = [0] * len(requests)
 
-indices = random.sample(range(0, len(vector)), int(len(vector)/3))
+indices = random.sample(range(0, len(vector)), int(len(vector)/25))
 
 for i in indices:  # Greedy approach -> greedy approach puši ogromnu kitu nećemo ić s njim
     reqStdId = requests[i][0] # studentId in request
@@ -114,6 +114,7 @@ for i in indices:  # Greedy approach -> greedy approach puši ogromnu kitu neće
     if IsRequestValid(reqStdId, reqActId, reqGrpId, requestsDict, groupsDict, studentsDict):
         counter += 1
         # Moze se napravit zamjena -> napravimo ju
+        vector[i] = 1
         vector = GrantRequest(vector, i, reqStdId, reqGrpId, reqActId, requestsDict, groupsDict, studentsDict)
         #vector = RevokeRequest(vector, i, reqStdId, reqGrpId, reqActId, requestsDict, groupsDict, studentsDict, studentsDictOrg)
 
