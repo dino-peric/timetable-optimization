@@ -2,8 +2,6 @@ import numpy as np
 from helpers import *
 import argparse, sys
 import time 
-#import asyncio
-#import queue
 from collections import deque
 
 # Command line arguments
@@ -63,6 +61,7 @@ for i in range(len(uniqueStudents)):
     studentsDict[uniqueStudents[i]] = newStudent
 
 studentsDictOrg = studentsDict.copy()
+studentsDictFinal = studentsDict.copy()
 
 groupsDict = {}                                                              # Dictionary where key = groupId, value = Group object
 for i in range(len(limits)):
@@ -81,11 +80,12 @@ for key in groupsDict:
             overlapsWith.append(overlaps[j][1])
     groupsDict[key].overlaps = overlapsWith
 
+
 reqFromOneStudent = set()                                                    # Get all requests grouped by students
 for i in range(len(requests)):
     reqFromOneStudent.add((requests[i][0], requests[i][1]))
 reqFromOneStudent = list(reqFromOneStudent)
-
+print(len(reqFromOneStudent))
 requestsDict = {}                                                            # Dictionary where key = (studentId, activityId), value = Request object
 for i in range(len(reqFromOneStudent)):
     newRequest = Request( reqFromOneStudent[i] )
@@ -102,11 +102,12 @@ for keyStd in studentsDict:
         if keyStd in keyReq:
             studentsDict[keyStd].numberOfRequests += 1
 
+studentsDictOrg = studentsDict.copy()
+bestStudentsDict = studentsDict.copy()
+
 counter = 0
 vector = [0] * len(requests)
-
-indices = random.sample(range(0, len(vector)), int(len(vector)/25))
-
+indices = random.sample(range(0, len(vector)), int(len(vector)/10))
 for i in indices:  # Greedy approach -> greedy approach puši ogromnu kitu nećemo ić s njim
     reqStdId = requests[i][0] # studentId in request
     reqActId = requests[i][1] # activityId in request
@@ -115,49 +116,32 @@ for i in indices:  # Greedy approach -> greedy approach puši ogromnu kitu neće
         counter += 1
         # Moze se napravit zamjena -> napravimo ju
         vector[i] = 1
-        vector = GrantRequest(vector, i, reqStdId, reqGrpId, reqActId, requestsDict, groupsDict, studentsDict)
+        GrantRequest(vector, i, reqStdId, reqGrpId, reqActId, requestsDict, groupsDict, studentsDict)
         #vector = RevokeRequest(vector, i, reqStdId, reqGrpId, reqActId, requestsDict, groupsDict, studentsDict, studentsDictOrg)
 
+overallBestScore = Score(vector, studentsDict, groupsDict, requests, limits, award_activity, award_student, minmax_penalty)
+overallBestSolution = vector[:]
+
 print(counter)
-bestVector = vector
 
-#print(Score(vector, studentsDict, groupsDict, requests, limits, award_activity, award_student, minmax_penalty))
-
-neighbours = []
 bestNeighbour = vector[:]
 counter = 0
-printed = False
 
-#queue = asyncio.Queue(maxsize=15)
 queue = deque()
 queue.clear()
 # Main loop
 while True:
-    bestNeighbour , queue = GenerateNeighbours(bestNeighbour, requests, requestsDict, groupsDict, studentsDict, studentsDictOrg, limits, award_activity, award_student, minmax_penalty,queue)  
-    #bestNeigbour = GetBestNeighbour(neighbours)
-    #neighbours.append(bestNeighbour)
-    #for neighbour in neighbours: 
-        #scores.append( Score( neighbour[:], studentsDict, groupsDict, requests, limits, award_activity, award_student, minmax_penalty ) ) 
-    #if len(scores) > 0:
-        #print(scores.index( max(scores) ))
-        #bestNeighbourIndex = scores.index( max(scores) )
-    #bestNeighbour = neighbours[bestNeighbourIndex][:]
-    #counter += 1
-    #if counter % 10 == 0:
-    #print(max(scores))
-
-
-    # TODO Pick best neighbour and make him new 
-    #bestVector = neighbours[i]
-    # TODO Taboo list 
+    bestNeighbour, overallBestScore, bestStudentsDict, queue = GenerateNeighbours(bestNeighbour, overallBestScore, bestStudentsDict, requests, requestsDict, groupsDict, studentsDict, studentsDictOrg, limits, award_activity, award_student, minmax_penalty,queue) 
 
     # Timeout check
     end = time.time()
     if end - start > int(timeout):
         break
 
+print(overallBestScore)
+
 # output to file
-Output('outstudents.txt', studentsHeader, students, studentsDict)
+Output('outstudents.txt', studentsHeader, students, bestStudentsDict)
 
 print(end - start)
 

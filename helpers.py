@@ -37,8 +37,6 @@ def Output(filename, studentsHeader, students, studentsDict):
     with open(filename, 'w') as f:
         f.write( studentsHeader[0] + ',' + studentsHeader[1] + ',' + studentsHeader[2] + ',' + studentsHeader[3] + ',' + studentsHeader[4] + '\n')
         for i in range(len(students)):
-            #if students[i][3] != studentsDict[students[i][0]].activityGroupPair[students[i][1]]:
-                #print (students[i][3], studentsDict[students[i][0]].activityGroupPair[students[i][1]] )
             f.write( students[i][0] + ',' + students[i][1] + ',' + students[i][2] + ',' + students[i][3] + ',' + studentsDict[students[i][0]].activityGroupPair[students[i][1]] + '\n' )
 
 def IsRequestValid(reqStdId, reqActId, reqGrpId, requestsDict, groupsDict, studentsDict):
@@ -86,7 +84,6 @@ def IsRequestRevokable(reqStdId, reqActId, reqGrpId, requestsDict, groupsDict, s
     return False
 
 def GrantRequest(arr, index, reqStdId, reqGrpId, reqActId, requestsDict, groupsDict, studentsDict):
-    #arr[index] = 1
     # Povecaj broj ljudi u grupi u koju zeli ici
     groupsDict[reqGrpId].currentStudentCount += 1
     # Smanji broj ljudi u grupi iz koje izlazi
@@ -95,11 +92,8 @@ def GrantRequest(arr, index, reqStdId, reqGrpId, reqActId, requestsDict, groupsD
     studentsDict[ reqStdId ].activityGroupPair[ reqActId ] = groupsDict[reqGrpId].groupID
     studentsDict[ reqStdId ].numberOfRequestsGranted += 1
     requestsDict[ (reqStdId, reqActId) ].granted = True
-    return arr
 
 def RevokeRequest(arr, index, reqStdId, reqGrpId, reqActId, requestsDict, groupsDict, studentsDict, studentsDictOrg): 
-    # Micemo request znaci u vectoru mora biti 0
-    #arr[index] = 0
     # Micemo granted jer sad opet mozemo raditi zamjene za tog studenta za tu aktivnost
     requestsDict[ (reqStdId, reqActId) ].granted = False
     studentsDict[ reqStdId ].numberOfRequestsGranted -= 1
@@ -109,14 +103,12 @@ def RevokeRequest(arr, index, reqStdId, reqGrpId, reqActId, requestsDict, groups
     groupsDict[reqGrpId].currentStudentCount -= 1
     # Povecati broj ljudi u orginalnoj grupi jer se u nju vraca, grupu smo zamijenili 2 linije gore
     groupsDict[ studentsDict[ reqStdId ].activityGroupPair[ reqActId ] ].currentStudentCount += 1
-    return arr       
 
-def GenerateNeighbours(vec, requests, requestsDict, groupsDict, studentsDict, studentsDictOrg, limits, award_activity, award_student, minmax_penalty,queue):
-    indices = random.sample(range(0, len(vec)), int(len(vec)/15))
+def GenerateNeighbours(vec, overallBestScore, bestStudentsDict, requests, requestsDict, groupsDict, studentsDict, studentsDictOrg, limits, award_activity, award_student, minmax_penalty, queue):
+    indices = random.sample(range(0, len(vec)), int(len(vec)/10))
     neighbours = []
-    bestScore = -1000
+    scores = []
     queueList = list(queue)
-    #print(queueList)
     for i in indices:
         if i not in queueList:
             reqStdId = requests[i][0] # studentId in request
@@ -126,35 +118,32 @@ def GenerateNeighbours(vec, requests, requestsDict, groupsDict, studentsDict, st
 
             if (neighbour[i] == 0):  # Zelimo flipat taj bit pa idemo vidit jel moze taj request proć         
                 if IsRequestValid(reqStdId, reqActId, reqGrpId, requestsDict, groupsDict, studentsDict): # Request može proć
-                    #neighbour = GrantRequest(neighbour, i, reqStdId, reqGrpId, reqActId, requestsDict, groupsDict, studentsDict)
                     neighbour[i] = 1
                     neighbours.append((neighbour, i))
+                    currentScore = Score( neighbour, studentsDict, groupsDict, requests, limits, award_activity, award_student, minmax_penalty )
+                    scores.append( currentScore )
+
             else: # neighbour[i] = 1 zelimo oduzet taj request
-                #neighbour = RevokeRequest(neighbour, i, reqStdId, reqGrpId, reqActId, requestsDict, groupsDict, studentsDict, studentsDictOrg)
                 if IsRequestRevokable(reqStdId, reqActId, reqGrpId, requestsDict, groupsDict, studentsDict, studentsDictOrg):
                     neighbour[i] = 0
                     neighbours.append((neighbour, i))
-            
+                    currentScore = Score( neighbour, studentsDict, groupsDict, requests, limits, award_activity, award_student, minmax_penalty )
+                    scores.append( currentScore )
 
-    scores = []
-    #scores.append(bestScore)
-    for neighbour in neighbours: 
-        currentScore = Score( neighbour[0][:], studentsDict, groupsDict, requests, limits, award_activity, award_student, minmax_penalty )
-        #if currentScore >= bestScore:
-        scores.append( currentScore )
-        #scores2.append(neighbour[1])
 
-    #if bestScore < max(scores):
+
+    #for neighbour in neighbours: 
+    #    currentScore = Score( neighbour[0][:], studentsDict, groupsDict, requests, limits, award_activity, award_student, minmax_penalty )
+    #    scores.append( currentScore )
+
+
     bestScore = max(scores)
     bestNeigbourIndex = scores.index( bestScore )
-    #bestScoreIndex = scores2[scores.index( bestScore )]
-    #print(scores )
     bestNeighbourBitFlippedIndex = neighbours[ bestNeigbourIndex ][1]
-    
     bestNeighbour = neighbours[ bestNeigbourIndex ][0][:]
 
     #Dodavanje najboljeg susjeda u tabu listu
-    if len(queue) >= 10:
+    if len(queue) >= 50:
         queue.popleft()
         queue.append(bestNeighbourBitFlippedIndex)
     else:
@@ -165,12 +154,18 @@ def GenerateNeighbours(vec, requests, requestsDict, groupsDict, studentsDict, st
     reqGrpId = requests[bestNeighbourBitFlippedIndex][2] # groupId in request
     
     if ( bestNeighbour[bestNeighbourBitFlippedIndex] == 1 ):  # Zelimo flipat taj bit pa idemo vidit jel moze taj request proć         
-        bestNeighbour = GrantRequest(bestNeighbour, bestNeighbourBitFlippedIndex, reqStdId, reqGrpId, reqActId, requestsDict, groupsDict, studentsDict)
+        GrantRequest(bestNeighbour, bestNeighbourBitFlippedIndex, reqStdId, reqGrpId, reqActId, requestsDict, groupsDict, studentsDict)
     else: # neighbour[i] = 1 zelimo oduzet taj request
-        bestNeighbour = RevokeRequest(bestNeighbour, bestNeighbourBitFlippedIndex, reqStdId, reqGrpId, reqActId, requestsDict, groupsDict, studentsDict, studentsDictOrg)
+        RevokeRequest(bestNeighbour, bestNeighbourBitFlippedIndex, reqStdId, reqGrpId, reqActId, requestsDict, groupsDict, studentsDict, studentsDictOrg)
     if len(scores) > 0:
-        print(max(scores), bestNeighbour.count(1))
-    return bestNeighbour, queue
+        print(bestScore, bestNeighbour.count(1))
+
+    if bestScore > overallBestScore:
+        print("number of requests given: ", bestNeighbour.count(1))
+        overallBestScore = bestScore
+        bestStudentsDict = studentsDict.copy()
+
+    return bestNeighbour, overallBestScore, bestStudentsDict, queue
 
 
 '''
@@ -230,7 +225,7 @@ def Score(vec, studentsDict, groupsDict, requests, limits, award_activity, award
         # Score E
         if groupsDict[key].currentStudentCount > groupsDict[key].maxPref:
             scoreE += (groupsDict[key].currentStudentCount - groupsDict[key].maxPref) * minmax_penalty
-    
+    #print("Scores:", scoreA, scoreB, scoreC, -scoreD, -scoreE)
     score = scoreA + scoreB + scoreC - scoreD - scoreE
     return score
 
