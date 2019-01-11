@@ -104,6 +104,65 @@ def RevokeRequest(arr, index, reqStdId, reqGrpId, reqActId, requestsDict, groups
     # Povecati broj ljudi u orginalnoj grupi jer se u nju vraca, grupu smo zamijenili 2 linije gore
     groupsDict[ studentsDict[ reqStdId ].activityGroupPair[ reqActId ] ].currentStudentCount += 1
 
+def GenNeighboursAndScores(vec, requests, requestsDict, groupsDict, studentsDict, studentsDictOrg, limits, award_activity, award_student, minmax_penalty, queue):
+    indices = random.sample(range(0, len(vec)), int(len(vec)/2))
+    neighbours = []
+    scores = []
+    queueList = list(queue)
+    for i in indices:
+        if i not in queueList:
+            reqStdId = requests[i][0] # studentId in request
+            reqActId = requests[i][1] # activityId in request
+            reqGrpId = requests[i][2] # groupId in request
+            neighbour = vec[:]
+
+            if (neighbour[i] == 0):  # Zelimo flipat taj bit pa idemo vidit jel moze taj request proć         
+                if IsRequestValid(reqStdId, reqActId, reqGrpId, requestsDict, groupsDict, studentsDict): # Request može proć
+                    neighbour[i] = 1
+                    neighbours.append((neighbour, i))
+                    currentScore = Score( neighbour, studentsDict, groupsDict, requests, limits, award_activity, award_student, minmax_penalty )
+                    scores.append( currentScore )
+
+            else: # neighbour[i] = 1 zelimo oduzet taj request
+                if IsRequestRevokable(reqStdId, reqActId, reqGrpId, requestsDict, groupsDict, studentsDict, studentsDictOrg):
+                    neighbour[i] = 0
+                    neighbours.append((neighbour, i))
+                    currentScore = Score( neighbour, studentsDict, groupsDict, requests, limits, award_activity, award_student, minmax_penalty )
+                    scores.append( currentScore )
+    return neighbours, scores
+
+def GetBestNeighbour(neighbours, scores, overallBestScore, bestStudentsDict, requests, requestsDict, groupsDict, studentsDict, studentsDictOrg, queue):
+    bestScore = max(scores)
+    bestNeigbourIndex = scores.index( bestScore )
+    bestNeighbourBitFlippedIndex = neighbours[ bestNeigbourIndex ][1]
+    bestNeighbour = neighbours[ bestNeigbourIndex ][0][:]
+
+    #Dodavanje najboljeg susjeda u tabu listu
+    if len(queue) >= 75:
+        queue.popleft()
+        queue.append(bestNeighbourBitFlippedIndex)
+    else:
+        queue.append(bestNeighbourBitFlippedIndex)
+
+    reqStdId = requests[bestNeighbourBitFlippedIndex][0] # studentId in request
+    reqActId = requests[bestNeighbourBitFlippedIndex][1] # activityId in request
+    reqGrpId = requests[bestNeighbourBitFlippedIndex][2] # groupId in request
+    
+    if ( bestNeighbour[bestNeighbourBitFlippedIndex] == 1 ):  # Zelimo flipat taj bit pa idemo vidit jel moze taj request proć         
+        GrantRequest(bestNeighbour, bestNeighbourBitFlippedIndex, reqStdId, reqGrpId, reqActId, requestsDict, groupsDict, studentsDict)
+    else: # neighbour[i] = 1 zelimo oduzet taj request
+        RevokeRequest(bestNeighbour, bestNeighbourBitFlippedIndex, reqStdId, reqGrpId, reqActId, requestsDict, groupsDict, studentsDict, studentsDictOrg)
+    if len(scores) > 0:
+        print(bestScore, bestNeighbour.count(1))
+
+    if bestScore > overallBestScore:
+        #print("number of requests given: ", bestNeighbour.count(1))
+        overallBestScore = bestScore
+        bestStudentsDict = studentsDict.copy()
+
+    return bestNeighbour, overallBestScore, bestStudentsDict, queue
+
+
 def GenerateNeighbours(vec, overallBestScore, bestStudentsDict, requests, requestsDict, groupsDict, studentsDict, studentsDictOrg, limits, award_activity, award_student, minmax_penalty, queue):
     indices = random.sample(range(0, len(vec)), int(len(vec)/10))
     neighbours = []
@@ -167,33 +226,6 @@ def GenerateNeighbours(vec, overallBestScore, bestStudentsDict, requests, reques
 
     return bestNeighbour, overallBestScore, bestStudentsDict, queue
 
-
-'''
-def GetBestNeighbour(vec, requests, requestsDict, groupsDict, studentsDict, studentsDictOrg, limits, award_activity, award_student, minmax_penalty):
-    neighbours = GenerateNeighbours(vec, requests, requestsDict, groupsDict, studentsDict, studentsDictOrg, limits, award_activity, award_student, minmax_penalty)
-    scores = []
-    for neighbour in neighbours: 
-        currentScore = Score( neighbour[0][:], studentsDict, groupsDict, requests, limits, award_activity, award_student, minmax_penalty )
-        if currentScore >= bestScore:
-            scores.append( currentScore )
-
-    if len(scores) > 0:
-        print(max(scores))
-    bestScore = max(scores)
-    bestNeigbourIndex = scores.index( bestScore )
-    bestNeighbour = neighbours[ bestNeigbourIndex ][0][:]
-
-    if (bestNeighbour[i] == 0):  # Zelimo flipat taj bit pa idemo vidit jel moze taj request proć         
-        if IsRequestValid(reqStdId, reqActId, reqGrpId, requestsDict, groupsDict, studentsDict): # Request može proć
-        #print("give me my nigga")
-            bestNeighbour = GrantRequest(bestNeighbour, i, reqStdId, reqGrpId, reqActId, requestsDict, groupsDict, studentsDict)
-    else: # neighbour[i] = 1 zelimo oduzet taj request
-        #print("take my nigga away")
-        bestNeighbour = RevokeRequest(bestNeighbour, i, reqStdId, reqGrpId, reqActId, requestsDict, groupsDict, studentsDict, studentsDictOrg)
-
-    return bestNeighbour
-'''
-
 def Score(vec, studentsDict, groupsDict, requests, limits, award_activity, award_student, minmax_penalty):
     score = 0
     scoreA = scoreB = scoreC = scoreD = scoreE = 0  
@@ -225,7 +257,6 @@ def Score(vec, studentsDict, groupsDict, requests, limits, award_activity, award
         # Score E
         if groupsDict[key].currentStudentCount > groupsDict[key].maxPref:
             scoreE += (groupsDict[key].currentStudentCount - groupsDict[key].maxPref) * minmax_penalty
-    #print("Scores:", scoreA, scoreB, scoreC, -scoreD, -scoreE)
     score = scoreA + scoreB + scoreC - scoreD - scoreE
     return score
 
@@ -252,7 +283,6 @@ class Group:
         self.max = 0 
         self.maxPref = 0
 
-# TODO figure this out 
 class Request:
     def __init__(self, requestID):
         self.requestID = requestID

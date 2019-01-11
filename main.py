@@ -7,13 +7,13 @@ from collections import deque
 # Command line arguments
 parser = argparse.ArgumentParser()
 parser.add_argument('-timeout', help='How long the program will run for')
-parser.add_argument('-award_activity', help='Array of awards')
-parser.add_argument('-award_student', help='Award for doing all swaps of a student')
-parser.add_argument('-minmax_penalty', help='Amount of points deducted for being outside pref values')
-parser.add_argument('-students_file', help='Students file')
-parser.add_argument('-requests_file', help='Requests file')
-parser.add_argument('-overlaps_file', help='Overlaps file')
-parser.add_argument('-limits_file', help='Limits file')
+parser.add_argument('-award-activity', help='Array of awards')
+parser.add_argument('-award-student', help='Award for doing all swaps of a student')
+parser.add_argument('-minmax-penalty', help='Amount of points deducted for being outside pref values')
+parser.add_argument('-students-file', help='Students file')
+parser.add_argument('-requests-file', help='Requests file')
+parser.add_argument('-overlaps-file', help='Overlaps file')
+parser.add_argument('-limits-file', help='Limits file')
 
 args = parser.parse_args()
 
@@ -107,8 +107,8 @@ bestStudentsDict = studentsDict.copy()
 
 counter = 0
 vector = [0] * len(requests)
-indices = random.sample(range(0, len(vector)), int(len(vector)/10))
-for i in indices:  # Greedy approach -> greedy approach puši ogromnu kitu nećemo ić s njim
+indices = random.sample(range(0, len(vector)), int(len(vector)))
+for i in indices: 
     reqStdId = requests[i][0] # studentId in request
     reqActId = requests[i][1] # activityId in request
     reqGrpId = requests[i][2] # groupId in request
@@ -130,15 +130,18 @@ counter = 0
 queue = deque()
 queue.clear()
 # Main loop
+iterations = 0
 while True:
-    bestNeighbour, overallBestScore, bestStudentsDict, queue = GenerateNeighbours(bestNeighbour, overallBestScore, bestStudentsDict, requests, requestsDict, groupsDict, studentsDict, studentsDictOrg, limits, award_activity, award_student, minmax_penalty,queue) 
-
+    #bestNeighbour, overallBestScore, bestStudentsDict, queue = GenerateNeighbours(bestNeighbour, overallBestScore, bestStudentsDict, requests, requestsDict, groupsDict, studentsDict, studentsDictOrg, limits, award_activity, award_student, minmax_penalty,queue) 
+    neighbours, scores = GenNeighboursAndScores(bestNeighbour, requests, requestsDict, groupsDict, studentsDict, studentsDictOrg, limits, award_activity, award_student, minmax_penalty, queue)
+    bestNeighbour, overallBestScore, bestStudentsDict, queue = GetBestNeighbour(neighbours, scores, overallBestScore, bestStudentsDict, requests, requestsDict, groupsDict, studentsDict, studentsDictOrg, queue)
     # Timeout check
     end = time.time()
     if end - start > int(timeout):
         break
+    iterations += 1
 
-print(overallBestScore)
+print(overallBestScore, iterations)
 
 # output to file
 Output('outstudents.txt', studentsHeader, students, bestStudentsDict)
