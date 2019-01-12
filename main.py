@@ -34,7 +34,6 @@ overlaps, overlapsHeader = ReadFileArray(overlaps_file)
 
 # Remove elements from requests that are in requests but not in students
 requests = RemoveDifferentElements(requests, students)
-start = time.time()
 
 # TODO Datoteka overlaps može sadržavati i podatke o grupama koje se ne nalaze u  
 #      ulaznoj datoteci students-file pa se ti podaci mogu slobodno zanemariti.
@@ -130,6 +129,7 @@ counter = 0
 queue = deque()
 queue.clear()
 # Main loop
+start = time.time()
 iterations = 0
 while True:
     #bestNeighbour, overallBestScore, bestStudentsDict, queue = GenerateNeighbours(bestNeighbour, overallBestScore, bestStudentsDict, requests, requestsDict, groupsDict, studentsDict, studentsDictOrg, limits, award_activity, award_student, minmax_penalty,queue) 
@@ -144,9 +144,18 @@ while True:
 print(overallBestScore, iterations)
 
 # output to file
-Output('outstudents.txt', studentsHeader, students, bestStudentsDict)
+Output('results/student' + str(int(end - start)) + '.csv', studentsHeader, students, bestStudentsDict)
 
 print(end - start)
 
-
+with open("results/sample4results.txt", 'a') as f:
+    f.write("\nSample 4\n")
+    f.write("Award activity: " + str(award_activity) + "\n")
+    f.write("Award student: " + str(award_student) + "\n")
+    f.write("Minmax penalty: " + str(minmax_penalty) + "\n")
+    f.write("Iterations: " + str(iterations) + "\n")
+    f.write("Time elapsed: " + str(end - start) + "\n")
+    f.write("Best score: " + str(overallBestScore) + "\n")
+    f.write("Number of requests given: " + str(bestNeighbour.count(1)) + "\n")
+    f.write("\n")
 
