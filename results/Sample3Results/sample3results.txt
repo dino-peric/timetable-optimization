@@ -1,0 +1,30 @@
+
+Sample 3
+Award activity: ['0', '2', '4']
+Award student: 1
+Minmax penalty: 1
+Iterations: 498
+Time elapsed: 600.5764336585999
+Best score: -7546
+Number of requests given: 697
+
+
+Sample 3
+Award activity: ['0', '2', '4']
+Award student: 1
+Minmax penalty: 1
+Iterations: 1389
+Time elapsed: 1800.8971588611603
+Best score: -4008
+Number of requests given: 1531
+
+
+Sample 3
+Award activity: ['0', '2', '4']
+Award student: 1
+Minmax penalty: 1
+Iterations: 2330
+Time elapsed: 3600.796347141266
+Best score: -2991
+Number of requests given: 1808
+
