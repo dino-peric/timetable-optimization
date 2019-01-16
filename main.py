@@ -39,7 +39,7 @@ requests = RemoveDifferentElements(requests, students)
 #      ulaznoj datoteci students-file pa se ti podaci mogu slobodno zanemariti.
 #      znaci treba proc kroz overlaps i uzet samo one groupIDeve koji se nalaze u groupID polju u
 #      students-file, ovo treba napraviti prije uniqueGroups poziva ili cak unutar njega, 
-#      a mozda i ne moramo uopce ne znam utjece li na performans, ovaj TODO je za kasnije nakon implementacije algoritma
+#      a mozda i ne moramo uopce ne znam utjece li na performans, ovaj TODO je za kasnije nakon implementacije algoritma, ili mozda nikada :^)
 
 # Get all unique students
 uniqueStudents = set()
@@ -84,7 +84,8 @@ reqFromOneStudent = set()                                                    # G
 for i in range(len(requests)):
     reqFromOneStudent.add((requests[i][0], requests[i][1]))
 reqFromOneStudent = list(reqFromOneStudent)
-print(len(reqFromOneStudent))
+
+
 requestsDict = {}                                                            # Dictionary where key = (studentId, activityId), value = Request object
 for i in range(len(reqFromOneStudent)):
     newRequest = Request( reqFromOneStudent[i] )
@@ -95,7 +96,7 @@ for i in range(len(reqFromOneStudent)):
     newRequest.requestedGroups = requestedGroups      
     requestsDict[ ( reqFromOneStudent[i][0], reqFromOneStudent[i][1] )] = newRequest
 
-# Number of requests for each student, but counting only requests for different activities
+# Number of requests for each student, but counting only requests for different activities ==> FOR SCORE C
 for keyStd in studentsDict:
     for keyReq in requestsDict:
         if keyStd in keyReq:
@@ -104,15 +105,14 @@ for keyStd in studentsDict:
 studentsDictOrg = studentsDict.copy()
 bestStudentsDict = studentsDict.copy()
 
-counter = 0
+# Initial solution
 vector = [0] * len(requests)
-indices = random.sample(range(0, len(vector)), int(len(vector)))
+indices = random.sample(range(0, len(vector)), int(len(vector)/2))
 for i in indices: 
     reqStdId = requests[i][0] # studentId in request
     reqActId = requests[i][1] # activityId in request
     reqGrpId = requests[i][2] # groupId in request
     if IsRequestValid(reqStdId, reqActId, reqGrpId, requestsDict, groupsDict, studentsDict):
-        counter += 1
         # Moze se napravit zamjena -> napravimo ju
         vector[i] = 1
         GrantRequest(vector, i, reqStdId, reqGrpId, reqActId, requestsDict, groupsDict, studentsDict)
@@ -121,20 +121,20 @@ for i in indices:
 overallBestScore = Score(vector, studentsDict, groupsDict, requests, limits, award_activity, award_student, minmax_penalty)
 overallBestSolution = vector[:]
 
-print(counter)
 
 bestNeighbour = vector[:]
 counter = 0
 
 queue = deque()
 queue.clear()
-# Main loop
 start = time.time()
 iterations = 0
+# Main loop
 while True:
     #bestNeighbour, overallBestScore, bestStudentsDict, queue = GenerateNeighbours(bestNeighbour, overallBestScore, bestStudentsDict, requests, requestsDict, groupsDict, studentsDict, studentsDictOrg, limits, award_activity, award_student, minmax_penalty,queue) 
     neighbours, scores = GenNeighboursAndScores(bestNeighbour, requests, requestsDict, groupsDict, studentsDict, studentsDictOrg, limits, award_activity, award_student, minmax_penalty, queue)
     bestNeighbour, overallBestScore, bestStudentsDict, queue = GetBestNeighbour(neighbours, scores, overallBestScore, bestStudentsDict, requests, requestsDict, groupsDict, studentsDict, studentsDictOrg, queue)
+    
     # Timeout check
     end = time.time()
     if end - start > int(timeout):
@@ -145,9 +145,11 @@ print(overallBestScore, iterations)
 
 # output to file
 Output('results/student' + str(int(end - start)) + '.csv', studentsHeader, students, bestStudentsDict)
+#Output('student.csv', studentsHeader, students, bestStudentsDict)
 
 print(end - start)
 
+'''
 with open("results/sample4results.txt", 'a') as f:
     f.write("\nSample 4\n")
     f.write("Award activity: " + str(award_activity) + "\n")
@@ -158,4 +160,4 @@ with open("results/sample4results.txt", 'a') as f:
     f.write("Best score: " + str(overallBestScore) + "\n")
     f.write("Number of requests given: " + str(bestNeighbour.count(1)) + "\n")
     f.write("\n")
-
+'''

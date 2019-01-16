@@ -44,7 +44,7 @@ def IsRequestValid(reqStdId, reqActId, reqGrpId, requestsDict, groupsDict, stude
     if not requestsDict[ (reqStdId, reqActId) ].granted:
         # Provjera za overlapping
         noOverlaps = True
-        for key in studentsDict[ reqStdId ].activityGroupPair:  # groupIDevi u kojima je student valjda
+        for key in studentsDict[ reqStdId ].activityGroupPair:  # groupIDevi u kojima je student
             if key != reqActId: # Ignoriramo aktivnost za koju trenutno gledamo
                 if reqGrpId in groupsDict[studentsDict[ reqStdId ].activityGroupPair[key]].overlaps:
                     noOverlaps = False
@@ -62,8 +62,8 @@ def IsRequestRevokable(reqStdId, reqActId, reqGrpId, requestsDict, groupsDict, s
     # Provjera je li već dan request za taj activity 
     if requestsDict[ (reqStdId, reqActId) ].granted:
 
-        # 1. Provjeri staru grupu da li ima mjesta u njoj
-        # 2. Provjeri da li se sa promjenom u staru grupu događa kakav overlap
+        # 1. Provjeri staru grupu ima li mjesta u njoj
+        # 2. Provjeri je li se događa kakav overlap sa vraćanjem u staru grupu
         orgGroupId = groupsDict[ studentsDictOrg[ reqStdId ].activityGroupPair[reqActId]].groupID
 
         # Provjera za overlapping
@@ -94,8 +94,6 @@ def GrantRequest(arr, index, reqStdId, reqGrpId, reqActId, requestsDict, groupsD
     requestsDict[ (reqStdId, reqActId) ].granted = True
 
 def RevokeRequest(arr, index, reqStdId, reqGrpId, reqActId, requestsDict, groupsDict, studentsDict, studentsDictOrg): 
-    # Micemo granted jer sad opet mozemo raditi zamjene za tog studenta za tu aktivnost
-    requestsDict[ (reqStdId, reqActId) ].granted = False
     studentsDict[ reqStdId ].numberOfRequestsGranted -= 1
     # Trebamo ga vratiti u staru grupu
     studentsDict[ reqStdId ].activityGroupPair[ reqActId ] = studentsDictOrg[ reqStdId ].activityGroupPair[reqActId]
@@ -103,6 +101,8 @@ def RevokeRequest(arr, index, reqStdId, reqGrpId, reqActId, requestsDict, groups
     groupsDict[reqGrpId].currentStudentCount -= 1
     # Povecati broj ljudi u orginalnoj grupi jer se u nju vraca, grupu smo zamijenili 2 linije gore
     groupsDict[ studentsDict[ reqStdId ].activityGroupPair[ reqActId ] ].currentStudentCount += 1
+    # Micemo granted jer sad opet mozemo raditi zamjene za tog studenta za tu aktivnost
+    requestsDict[ (reqStdId, reqActId) ].granted = False
 
 def GenNeighboursAndScores(vec, requests, requestsDict, groupsDict, studentsDict, studentsDictOrg, limits, award_activity, award_student, minmax_penalty, queue):
     indices = random.sample(range(0, len(vec)), int(len(vec)/2))
@@ -162,7 +162,7 @@ def GetBestNeighbour(neighbours, scores, overallBestScore, bestStudentsDict, req
 
     return bestNeighbour, overallBestScore, bestStudentsDict, queue
 
-
+# Legacy funkcija. Ništa ne radi. Razdvojena u GenNeighboursAndScores & GetBestNeighbour
 def GenerateNeighbours(vec, overallBestScore, bestStudentsDict, requests, requestsDict, groupsDict, studentsDict, studentsDictOrg, limits, award_activity, award_student, minmax_penalty, queue):
     indices = random.sample(range(0, len(vec)), int(len(vec)/10))
     neighbours = []
@@ -250,13 +250,14 @@ def Score(vec, studentsDict, groupsDict, requests, limits, award_activity, award
                 scoreE += (groupsDict[ requests[i][2] ].currentStudentCount - groupsDict[ requests[i][2] ].maxPref) * minmax_penalty
             '''
             
-    for key in groupsDict: # Loop through all groups :'(
+    for key in groupsDict: # Loop through all groups 
         # Score D
         if groupsDict[key].currentStudentCount < groupsDict[key].minPref:
             scoreD += (groupsDict[key].minPref - groupsDict[key].currentStudentCount) * minmax_penalty
         # Score E
         if groupsDict[key].currentStudentCount > groupsDict[key].maxPref:
             scoreE += (groupsDict[key].currentStudentCount - groupsDict[key].maxPref) * minmax_penalty
+    
     score = scoreA + scoreB + scoreC - scoreD - scoreE
     return score
 
@@ -265,17 +266,16 @@ class Student:
     def __init__(self, studentID):
         self.studentID = studentID
         self.weight = 0
-        # Dictionary where key = activityID, value = groupID of that student
-        # This is basically the timetable of the student 
-        self.activityGroupPair = {}
+
+        self.activityGroupPair = {} # Dictionary where key = activityID, value = groupID of that student
+                                    # This is basically the initial timetable of the student 
         self.numberOfRequests = 0 # Total number of requests
         self.numberOfRequestsGranted = 0 
 
 class Group:
     def __init__(self, groupID):
         self.groupID = groupID
-        # Should contain all groups that this group overlaps with
-        self.overlaps = []
+        self.overlaps = []         # Should contain all groups that this group overlaps with
         self.initStudentsCount = 0
         self.currentStudentCount = 0
         self.min = 0  
